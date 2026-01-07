@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/api/client';
-import type { Order, OrdersData, OrderStatus, OrderDisplay, OrderStats } from '../types';
+import { OrderStatus, DiscountType, TransactionStatus } from '../types';
+import type { Order, OrdersData, OrderDisplay, OrderStats } from '../types';
 
 export const orderService = {
     /**
@@ -19,7 +20,7 @@ export const orderService = {
                     userEmail: 'somchai@email.com',
                     courses: 2,
                     totalAmount: 4490,
-                    status: 'PAID',
+                    status: OrderStatus.PAID,
                     paymentMethod: 'Credit Card',
                     createdAt: '2026-01-07T10:30:00Z',
                 },
@@ -30,7 +31,7 @@ export const orderService = {
                     userEmail: 'somying@email.com',
                     courses: 1,
                     totalAmount: 2990,
-                    status: 'PENDING',
+                    status: OrderStatus.PENDING,
                     paymentMethod: 'Bank Transfer',
                     createdAt: '2026-01-07T12:15:00Z',
                 },
@@ -41,7 +42,7 @@ export const orderService = {
                     userEmail: 'vipa@email.com',
                     courses: 3,
                     totalAmount: 7990,
-                    status: 'PAID',
+                    status: OrderStatus.PAID,
                     paymentMethod: 'PromptPay',
                     createdAt: '2026-01-07T14:20:00Z',
                 },
@@ -52,7 +53,7 @@ export const orderService = {
                     userEmail: 'nattapol@email.com',
                     courses: 1,
                     totalAmount: 1990,
-                    status: 'CANCELLED',
+                    status: OrderStatus.CANCELLED,
                     paymentMethod: 'Credit Card',
                     createdAt: '2026-01-06T16:45:00Z',
                 },
@@ -63,7 +64,7 @@ export const orderService = {
                     userEmail: 'piya@email.com',
                     courses: 2,
                     totalAmount: 5980,
-                    status: 'PAID',
+                    status: OrderStatus.PAID,
                     paymentMethod: 'Credit Card',
                     createdAt: '2026-01-06T15:30:00Z',
                 },
@@ -74,7 +75,7 @@ export const orderService = {
                     userEmail: 'surachai@email.com',
                     courses: 1,
                     totalAmount: 2990,
-                    status: 'PENDING',
+                    status: OrderStatus.PENDING,
                     paymentMethod: 'Bank Transfer',
                     createdAt: '2026-01-06T11:00:00Z',
                 },
@@ -113,14 +114,14 @@ export const orderService = {
                 voucherId: 1,
                 grandTotal: 4490,
                 discountAmount: 500,
-                status: 'PAID',
+                status: OrderStatus.PAID,
                 paymentMethod: 'Credit Card',
                 createdAt: '2026-01-07T10:30:00Z',
                 paidAt: '2026-01-07T10:32:15Z',
                 voucher: {
                     id: 1,
                     code: 'NEW2026',
-                    discountType: 'PERCENT',
+                    discountType: DiscountType.PERCENT,
                     discountValue: 10,
                     usageLimit: 100,
                     perUserLimit: 1,
@@ -153,7 +154,7 @@ export const orderService = {
                         transactionRefId: 'TXN-20260107-001',
                         gateway: 'Stripe',
                         amount: 4490,
-                        status: 'SUCCESS',
+                        status: TransactionStatus.SUCCESS,
                         createdAt: '2026-01-07T10:32:15Z',
                         completedAt: '2026-01-07T10:32:20Z',
                     },
