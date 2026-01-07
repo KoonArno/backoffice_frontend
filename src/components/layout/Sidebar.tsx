@@ -172,78 +172,128 @@ function MenuItemComponent({ item, isCollapsed }: { item: MenuItem; isCollapsed:
     );
 }
 
-export default function Sidebar() {
-    // State สำหรับจัดการการย่อ-ขยาย พร้อม localStorage
-    const [isCollapsed, setIsCollapsed] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('sidebar-collapsed');
-            return saved === 'true';
-        }
-        return false;
-    });
+interface SidebarProps {
+    isMobileMenuOpen?: boolean;
+    onMobileMenuClose?: () => void;
+}
 
-    // บันทึกสถานะลง localStorage เมื่อมีการเปลี่ยนแปลง
+export default function Sidebar({ isMobileMenuOpen = false, onMobileMenuClose }: SidebarProps) {
+    // Initialize as false to match server render, update in useEffect
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    // Read from localStorage after mount to avoid hydration mismatch
     useEffect(() => {
-        localStorage.setItem('sidebar-collapsed', String(isCollapsed));
-        // ส่ง event เพื่อแจ้งให้ components อื่นรู้ว่า sidebar เปลี่ยนสถานะ
-        window.dispatchEvent(new Event('sidebar-toggle'));
-    }, [isCollapsed]);
+        const saved = localStorage.getItem('sidebar-collapsed');
+        if (saved === 'true') {
+            setIsCollapsed(true);
+        }
+        setMounted(true);
+    }, []);
+
+    // บันทึกสถานะลง localStorage และ update CSS variable
+    useEffect(() => {
+        if (mounted) {
+            localStorage.setItem('sidebar-collapsed', String(isCollapsed));
+            // Update CSS variable for topbar positioning
+            document.documentElement.style.setProperty(
+                '--sidebar-width',
+                isCollapsed ? '80px' : '280px'
+            );
+            // ส่ง event เพื่อแจ้งให้ components อื่นรู้ว่า sidebar เปลี่ยนสถานะ
+            window.dispatchEvent(new Event('sidebar-toggle'));
+        }
+    }, [isCollapsed, mounted]);
+
+    // ป้องกัน body scroll เมื่อ mobile menu เปิด
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isMobileMenuOpen]);
 
     return (
-        <aside className={clsx(
-            "fixed left-0 top-0 h-screen flex flex-col z-50 bg-gradient-to-b from-sky-500 to-sky-600 shadow-2xl transition-all duration-300",
-            isCollapsed ? 'w-[80px]' : 'w-[280px]'
-        )}>
-            {/* Logo */}
-            <div className="h-[72px] flex items-center justify-between px-6 border-b border-white/20 backdrop-blur-sm">
-                <div className={clsx(
-                    "flex items-center gap-3 transition-all duration-300",
-                    isCollapsed && "justify-center w-full"
-                )}>
-                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg border border-white/30 hover:scale-110 transition-transform">
-                        <BookOpen size={22} className="text-white" />
-                    </div>
-                    {!isCollapsed && (
-                        <div className="overflow-hidden">
+        <>
+            {/* Backdrop สำหรับ mobile */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-fade-in"
+                    onClick={onMobileMenuClose}
+                    aria-label="ปิดเมนู"
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={clsx(
+                "fixed left-0 top-0 h-screen flex flex-col bg-gradient-to-b from-sky-500 to-sky-600 shadow-2xl transition-all duration-300",
+                // Mobile: drawer behavior with translate
+                "z-50 lg:z-50",
+                // Desktop: normal positioning
+                "lg:translate-x-0",
+                // Mobile open/close
+                isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+                // Width - fixed width for both mobile and desktop
+                isCollapsed ? 'w-[80px]' : 'w-[280px]'
+            )}>
+                {/* Logo */}
+                <div className="h-[72px] flex items-center justify-between px-6 border-b border-white/20 backdrop-blur-sm">
+                    <div className={clsx(
+                        "flex items-center gap-3 transition-all duration-300",
+                        isCollapsed && "lg:justify-center lg:w-full"
+                    )}>
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg border border-white/30 hover:scale-110 transition-transform">
+                            <BookOpen size={22} className="text-white" />
+                        </div>
+                        <div className={clsx(
+                            "overflow-hidden",
+                            isCollapsed && "lg:hidden"
+                        )}>
                             <span className="text-white font-bold text-xl tracking-tight block">Pharmacy LMS</span>
                             <span className="text-white/70 text-xs">ระบบจัดการเรียนรู้</span>
                         </div>
-                    )}
-                </div>
-                {!isCollapsed && (
+                    </div>
+                    {/* Desktop collapse button */}
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="p-2 hover:bg-white/20 rounded-lg transition-all text-white/80 hover:text-white"
+                        className={clsx(
+                            "hidden lg:block p-2 hover:bg-white/20 rounded-lg transition-all text-white/80 hover:text-white",
+                            isCollapsed && "lg:hidden"
+                        )}
                         aria-label="ย่อ sidebar"
                         title="ย่อ sidebar"
                     >
                         <ChevronLeft size={20} />
                     </button>
+                </div>
+
+                {/* ปุ่มขยาย (แสดงเมื่อย่ออยู่ - desktop only) */}
+                {isCollapsed && (
+                    <div className="hidden lg:flex justify-center py-3 border-b border-white/20">
+                        <button
+                            onClick={() => setIsCollapsed(!isCollapsed)}
+                            className="p-2 hover:bg-white/20 rounded-lg transition-all text-white/80 hover:text-white"
+                            aria-label="ขยาย sidebar"
+                            title="ขยาย sidebar"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
                 )}
-            </div>
 
-            {/* ปุ่มขยาย (แสดงเมื่อย่ออยู่) */}
-            {isCollapsed && (
-                <div className="flex justify-center py-3 border-b border-white/20">
-                    <button
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="p-2 hover:bg-white/20 rounded-lg transition-all text-white/80 hover:text-white"
-                        aria-label="ขยาย sidebar"
-                        title="ขยาย sidebar"
-                    >
-                        <ChevronRight size={20} />
-                    </button>
-                </div>
-            )}
-
-            {/* Menu */}
-            <nav className="flex-1 overflow-y-auto py-6 px-4">
-                <div className="space-y-2">
-                    {menuItems.map((item) => (
-                        <MenuItemComponent key={item.name} item={item} isCollapsed={isCollapsed} />
-                    ))}
-                </div>
-            </nav>
-        </aside>
+                {/* Menu */}
+                <nav className="flex-1 overflow-y-auto py-6 px-4">
+                    <div className="space-y-2">
+                        {menuItems.map((item) => (
+                            <MenuItemComponent key={item.name} item={item} isCollapsed={isCollapsed} />
+                        ))}
+                    </div>
+                </nav>
+            </aside>
+        </>
     );
 }

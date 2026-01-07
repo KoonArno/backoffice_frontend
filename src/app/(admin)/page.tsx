@@ -67,23 +67,22 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">แดชบอร์ด</h1>
-          <p className="text-slate-500 flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">แดชบอร์ด</h1>
+          <p className="text-slate-500 flex items-center gap-2 text-sm md:text-base mt-1">
             <Calendar size={16} />
             {new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/courses/add"
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus size={18} />
-            เพิ่มคอร์สใหม่
-          </Link>
-        </div>
+        <Link
+          href="/courses/add"
+          className="flex items-center justify-center gap-2 px-5 md:px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm md:text-base touch-target"
+        >
+          <Plus size={18} />
+          <span className="hidden sm:inline">เพิ่มคอร์สใหม่</span>
+          <span className="sm:hidden">เพิ่มคอร์ส</span>
+        </Link>
       </div>
 
       {/* Stats Cards */}
@@ -106,7 +105,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Weekly Revenue Chart */}
           <div className="bg-white rounded-2xl shadow-md border border-blue-100 overflow-hidden">
-            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between">
+            <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
                   <BarChart3 size={20} className="text-white" />
@@ -116,16 +115,16 @@ export default function DashboardPage() {
                   <p className="text-sm text-slate-500">7 วันล่าสุด</p>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="text-2xl font-bold text-blue-600">฿{(weeklyRevenue.reduce((a, b) => a + b.amount, 0) / 1000).toFixed(1)}k</p>
-                <p className="text-sm text-emerald-600 flex items-center gap-1 justify-end">
+                <p className="text-sm text-emerald-600 flex items-center gap-1 sm:justify-end">
                   <TrendingUp size={14} />
                   +15% จากสัปดาห์ก่อน
                 </p>
               </div>
             </div>
-            <div className="p-6">
-              <div className="flex items-end justify-between gap-3 h-40">
+            <div className="p-4 md:p-6">
+              <div className="flex items-end justify-between gap-2 md:gap-3 h-32 md:h-40">
                 {weeklyRevenue.map((day, idx) => (
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                     <div
@@ -141,7 +140,7 @@ export default function DashboardPage() {
 
           {/* Recent Enrollments */}
           <div className="bg-white rounded-2xl shadow-md border border-blue-100 overflow-hidden">
-            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between">
+            <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
                   <Users size={20} className="text-white" />
@@ -152,21 +151,21 @@ export default function DashboardPage() {
                 </div>
               </div>
               <Link href="/users" className="text-blue-600 hover:text-blue-700 text-sm font-semibold flex items-center gap-1">
-                ดูทั้งหมด
+                <span className="hidden sm:inline">ดูทั้งหมด</span>
                 <ArrowRight size={16} />
               </Link>
             </div>
             <div className="divide-y divide-slate-100">
               {data.recentEnrollments.slice(0, 5).map((enrollment) => (
-                <div key={enrollment.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-all">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold">
+                <div key={enrollment.id} className="p-3 md:p-4 flex items-center gap-3 md:gap-4 hover:bg-slate-50 transition-all">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0">
                     {enrollment.userName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 truncate">{enrollment.userName}</p>
+                    <p className="font-medium text-slate-800 truncate text-sm md:text-base">{enrollment.userName}</p>
                     <p className="text-sm text-slate-500 truncate">{enrollment.courseName}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <span className="text-xs text-slate-400">
                       {formatDistanceToNow(enrollment.enrolledAt, { addSuffix: true, locale: th })}
                     </span>
@@ -180,22 +179,22 @@ export default function DashboardPage() {
         {/* Right Column - Sidebar */}
         <div className="space-y-6">
           {/* Quick Actions */}
-          <div className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-2xl shadow-xl p-6 text-white">
+          <div className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-2xl shadow-xl p-4 md:p-6 text-white">
             <h3 className="font-bold text-lg mb-4">การดำเนินการด่วน</h3>
             <div className="space-y-3">
-              <Link href="/courses/add" className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl hover:bg-white/20 transition-all">
+              <Link href="/courses/add" className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl hover:bg-white/20 transition-all touch-target">
                 <Plus size={20} />
                 <span className="font-medium">เพิ่มคอร์สใหม่</span>
               </Link>
-              <Link href="/users/pharmacists" className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl hover:bg-white/20 transition-all">
+              <Link href="/users/pharmacists" className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl hover:bg-white/20 transition-all touch-target">
                 <Users size={20} />
                 <span className="font-medium">จัดการเภสัชกร</span>
               </Link>
-              <Link href="/payments/transactions" className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl hover:bg-white/20 transition-all">
+              <Link href="/payments/transactions" className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl hover:bg-white/20 transition-all touch-target">
                 <CreditCard size={20} />
                 <span className="font-medium">ดูรายการธุรกรรม</span>
               </Link>
-              <Link href="/payments/coupons" className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl hover:bg-white/20 transition-all">
+              <Link href="/payments/coupons" className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl hover:bg-white/20 transition-all touch-target">
                 <Award size={20} />
                 <span className="font-medium">จัดการคูปอง</span>
               </Link>
@@ -204,7 +203,7 @@ export default function DashboardPage() {
 
           {/* Top Courses */}
           <div className="bg-white rounded-2xl shadow-md border border-blue-100 overflow-hidden">
-            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between">
+            <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-violet-500 rounded-xl flex items-center justify-center">
                   <BookOpen size={20} className="text-white" />

@@ -3,33 +3,41 @@
 :root {
   --sidebar-width: 280px;
   --topbar-height: 72px;
-  
+
   /* Light Blue & White Theme */
   --background: #f0f9ff;
   --background-secondary: #ffffff;
   --foreground: #0f172a;
-  
+
   /* Sidebar - Light Blue Gradient */
   --sidebar-bg: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
   --sidebar-text: rgba(255, 255, 255, 0.8);
   --sidebar-text-active: #ffffff;
   --sidebar-hover: rgba(255, 255, 255, 0.15);
-  
+
   /* Primary Colors - Sky Blue */
   --primary: #0ea5e9;
   --primary-hover: #0284c7;
   --primary-light: #e0f2fe;
-  
+
   /* Accent Colors */
   --accent-blue: #38bdf8;
   --accent-cyan: #22d3ee;
   --accent-indigo: #818cf8;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile-specific variables */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+    --topbar-height: 64px;
+  }
 }
 
 * {
@@ -40,13 +48,15 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', 'Noto Sans Thai', system-ui, -apple-system, sans-serif;
+  font-family: "Inter", "Noto Sans Thai", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* Smooth transitions for all interactive elements */
-button, a, input {
+button,
+a,
+input {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -69,6 +79,18 @@ button, a, input {
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+}
+
+/* Mobile-optimized scrollbar */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 1px solid #e0f2fe;
+  }
 }
 
 /* Glassmorphic Effects */
@@ -116,4 +138,25 @@ button, a, input {
 .card-hover:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
+}
+
+/* Touch-friendly sizing utilities */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent text selection on buttons for better mobile UX */
+button {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Improve input focus on mobile */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
 }

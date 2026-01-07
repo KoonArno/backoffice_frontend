@@ -43,16 +43,17 @@ export default function UsersPage() {
     }
 
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-6 md:space-y-8 animate-fade-in">
             {/* Page Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 mb-1">บุคคลทั่วไป</h1>
-                    <p className="text-slate-500">จัดการผู้ใช้ทั่วไปในระบบ</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-1">บุคคลทั่วไป</h1>
+                    <p className="text-slate-500 text-sm md:text-base">จัดการผู้ใช้ทั่วไปในระบบ</p>
                 </div>
-                <button className="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-blue-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all font-semibold">
+                <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-500 text-white px-5 md:px-6 py-3 rounded-xl hover:shadow-lg transition-all font-semibold touch-target">
                     <Plus size={20} />
-                    <span>เพิ่มผู้ใช้</span>
+                    <span className="hidden sm:inline">เพิ่มผู้ใช้</span>
+                    <span className="sm:hidden">เพิ่ม</span>
                 </button>
             </div>
 
@@ -74,18 +75,18 @@ export default function UsersPage() {
                 />
 
                 {/* Pagination */}
-                <div className="p-6 border-t border-sky-100 bg-slate-50 flex items-center justify-between">
-                    <p className="text-sm text-slate-500 font-medium">
+                <div className="p-4 md:p-6 border-t border-sky-100 bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <p className="text-sm text-slate-500 font-medium text-center sm:text-left">
                         แสดง 1-{users.length} {stats && `จาก ${stats.total.toLocaleString('th-TH')} รายการ`}
                     </p>
-                    <div className="flex items-center gap-2">
-                        <button className="px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white disabled:opacity-50 font-semibold transition-all" disabled>
+                    <div className="flex items-center justify-center gap-2">
+                        <button className="px-3 md:px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white disabled:opacity-50 font-semibold transition-all touch-target" disabled>
                             ก่อนหน้า
                         </button>
-                        <button className="px-4 py-2 bg-sky-500 text-white rounded-xl text-sm font-semibold shadow-sm">1</button>
-                        <button className="px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white font-semibold transition-all">2</button>
-                        <button className="px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white font-semibold transition-all">3</button>
-                        <button className="px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white font-semibold transition-all">
+                        <button className="px-3 md:px-4 py-2 bg-sky-500 text-white rounded-xl text-sm font-semibold shadow-sm min-w-[40px]">1</button>
+                        <button className="px-3 md:px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white font-semibold transition-all min-w-[40px]">2</button>
+                        <button className="px-3 md:px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white font-semibold transition-all min-w-[40px]">3</button>
+                        <button className="px-3 md:px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white font-semibold transition-all touch-target">
                             ถัดไป
                         </button>
                     </div>

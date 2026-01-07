@@ -9,8 +9,10 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-    // ดึงสถานะ sidebar จาก localStorage
+    // สถานะสำหรับ desktop sidebar collapse
     const [isCollapsed, setIsCollapsed] = useState(false);
+    // สถานะสำหรับ mobile sidebar open
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         // อ่านค่าจาก localStorage
@@ -39,15 +41,38 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         };
     }, []);
 
+    // ปิด mobile menu เมื่อ resize เป็น desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     return (
         <div className="min-h-screen bg-sky-50/50">
-            <Sidebar />
-            <Topbar />
-            <main className={`pt-[72px] p-8 transition-all duration-300 ${
-                isCollapsed ? 'ml-[80px]' : 'ml-[280px]'
-            }`}>
+            <Sidebar 
+                isMobileMenuOpen={isMobileMenuOpen}
+                onMobileMenuClose={() => setIsMobileMenuOpen(false)}
+            />
+            <Topbar 
+                onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            />
+            <main 
+                style={{ paddingTop: '96px' }}
+                className={`p-4 md:p-6 lg:p-8 transition-all duration-300 ${
+                    isCollapsed 
+                        ? 'ml-0 lg:ml-[80px]' 
+                        : 'ml-0 lg:ml-[280px]'
+                }`}
+            >
                 {children}
             </main>
         </div>
     );
 }
+
