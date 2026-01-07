@@ -21,9 +21,11 @@ import {
     CreditCard as PaymentIcon,
     Shield,
     UserCog,
-    Video
+    Video,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
 interface MenuItem {
@@ -82,11 +84,18 @@ const menuItems: MenuItem[] = [
     },
 ];
 
-function MenuItemComponent({ item }: { item: MenuItem }) {
+function MenuItemComponent({ item, isCollapsed }: { item: MenuItem; isCollapsed: boolean }) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
 
     const isActive = item.href === pathname || item.children?.some(child => child.href === pathname);
+
+    // ปิด submenu อัตโนมัติเมื่อย่อ sidebar
+    useEffect(() => {
+        if (isCollapsed) {
+            setIsOpen(false);
+        }
+    }, [isCollapsed]);
 
     if (item.children) {
         return (
@@ -97,8 +106,10 @@ function MenuItemComponent({ item }: { item: MenuItem }) {
                         'w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200',
                         isActive
                             ? 'bg-white/25 text-white shadow-lg backdrop-blur-md border border-white/30'
-                            : 'text-white/80 hover:bg-white/15 hover:text-white hover:shadow-md'
+                            : 'text-white/80 hover:bg-white/15 hover:text-white hover:shadow-md',
+                        isCollapsed && 'justify-center'
                     )}
+                    title={isCollapsed ? item.name : undefined}
                 >
                     <div className="flex items-center gap-3">
                         <div className={clsx(
@@ -107,14 +118,16 @@ function MenuItemComponent({ item }: { item: MenuItem }) {
                         )}>
                             {item.icon}
                         </div>
-                        <span>{item.name}</span>
+                        {!isCollapsed && <span>{item.name}</span>}
                     </div>
-                    <ChevronDown
-                        size={18}
-                        className={clsx('transition-transform duration-300', isOpen && 'rotate-180')}
-                    />
+                    {!isCollapsed && (
+                        <ChevronDown
+                            size={18}
+                            className={clsx('transition-transform duration-300', isOpen && 'rotate-180')}
+                        />
+                    )}
                 </button>
-                {isOpen && (
+                {isOpen && !isCollapsed && (
                     <div className="mt-2 ml-6 space-y-1 animate-slide-in">
                         {item.children.map((child) => (
                             <Link
@@ -143,8 +156,10 @@ function MenuItemComponent({ item }: { item: MenuItem }) {
                 'flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group',
                 isActive
                     ? 'bg-white/25 text-white shadow-lg backdrop-blur-md border border-white/30'
-                    : 'text-white/80 hover:bg-white/15 hover:text-white hover:shadow-md'
+                    : 'text-white/80 hover:bg-white/15 hover:text-white hover:shadow-md',
+                isCollapsed && 'justify-center'
             )}
+            title={isCollapsed ? item.name : undefined}
         >
             <div className={clsx(
                 'transition-transform',
@@ -152,48 +167,83 @@ function MenuItemComponent({ item }: { item: MenuItem }) {
             )}>
                 {item.icon}
             </div>
-            <span>{item.name}</span>
+            {!isCollapsed && <span>{item.name}</span>}
         </Link>
     );
 }
 
 export default function Sidebar() {
+    // State สำหรับจัดการการย่อ-ขยาย พร้อม localStorage
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('sidebar-collapsed');
+            return saved === 'true';
+        }
+        return false;
+    });
+
+    // บันทึกสถานะลง localStorage เมื่อมีการเปลี่ยนแปลง
+    useEffect(() => {
+        localStorage.setItem('sidebar-collapsed', String(isCollapsed));
+        // ส่ง event เพื่อแจ้งให้ components อื่นรู้ว่า sidebar เปลี่ยนสถานะ
+        window.dispatchEvent(new Event('sidebar-toggle'));
+    }, [isCollapsed]);
+
     return (
-        <aside className="fixed left-0 top-0 h-screen w-[280px] flex flex-col z-50 bg-gradient-to-b from-sky-500 to-sky-600 shadow-2xl">
+        <aside className={clsx(
+            "fixed left-0 top-0 h-screen flex flex-col z-50 bg-gradient-to-b from-sky-500 to-sky-600 shadow-2xl transition-all duration-300",
+            isCollapsed ? 'w-[80px]' : 'w-[280px]'
+        )}>
             {/* Logo */}
-            <div className="h-[72px] flex items-center px-6 border-b border-white/20 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
+            <div className="h-[72px] flex items-center justify-between px-6 border-b border-white/20 backdrop-blur-sm">
+                <div className={clsx(
+                    "flex items-center gap-3 transition-all duration-300",
+                    isCollapsed && "justify-center w-full"
+                )}>
                     <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg border border-white/30 hover:scale-110 transition-transform">
                         <BookOpen size={22} className="text-white" />
                     </div>
-                    <div>
-                        <span className="text-white font-bold text-xl tracking-tight block">Pharmacy LMS</span>
-                        <span className="text-white/70 text-xs">ระบบจัดการเรียนรู้</span>
-                    </div>
+                    {!isCollapsed && (
+                        <div className="overflow-hidden">
+                            <span className="text-white font-bold text-xl tracking-tight block">Pharmacy LMS</span>
+                            <span className="text-white/70 text-xs">ระบบจัดการเรียนรู้</span>
+                        </div>
+                    )}
                 </div>
+                {!isCollapsed && (
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="p-2 hover:bg-white/20 rounded-lg transition-all text-white/80 hover:text-white"
+                        aria-label="ย่อ sidebar"
+                        title="ย่อ sidebar"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
+                )}
             </div>
+
+            {/* ปุ่มขยาย (แสดงเมื่อย่ออยู่) */}
+            {isCollapsed && (
+                <div className="flex justify-center py-3 border-b border-white/20">
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="p-2 hover:bg-white/20 rounded-lg transition-all text-white/80 hover:text-white"
+                        aria-label="ขยาย sidebar"
+                        title="ขยาย sidebar"
+                    >
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
+            )}
 
             {/* Menu */}
             <nav className="flex-1 overflow-y-auto py-6 px-4">
                 <div className="space-y-2">
                     {menuItems.map((item) => (
-                        <MenuItemComponent key={item.name} item={item} />
+                        <MenuItemComponent key={item.name} item={item} isCollapsed={isCollapsed} />
                     ))}
                 </div>
             </nav>
-
-            {/* User */}
-            <div className="p-4 mt-auto border-t border-white/20 backdrop-blur-sm">
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all cursor-pointer border border-white/20">
-                    <div className="w-11 h-11 bg-gradient-to-br from-white/30 to-white/10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-2 border-white/40">
-                        A
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">ผู้ดูแลระบบ</p>
-                        <p className="text-xs text-white/70 truncate">Super Admin</p>
-                    </div>
-                </div>
-            </div>
         </aside>
     );
 }

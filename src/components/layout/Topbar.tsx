@@ -1,13 +1,34 @@
 'use client';
 
 import { Bell, Search, Menu, Moon, Sun, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Topbar() {
     const [isDark, setIsDark] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    useEffect(() => {
+        // อ่านค่าจาก localStorage
+        const savedState = localStorage.getItem('sidebar-collapsed');
+        setIsCollapsed(savedState === 'true');
+
+        // ฟังการเปลี่ยนแปลงของ sidebar
+        const handleSidebarToggle = () => {
+            const newState = localStorage.getItem('sidebar-collapsed');
+            setIsCollapsed(newState === 'true');
+        };
+
+        window.addEventListener('sidebar-toggle', handleSidebarToggle);
+
+        return () => {
+            window.removeEventListener('sidebar-toggle', handleSidebarToggle);
+        };
+    }, []);
 
     return (
-        <header className="fixed top-0 left-[280px] right-0 h-[72px] bg-white/80 backdrop-blur-xl border-b border-sky-100 z-40 flex items-center justify-between px-8 shadow-sm">
+        <header className={`fixed top-0 right-0 h-[72px] bg-white/80 backdrop-blur-xl border-b border-sky-100 z-40 flex items-center justify-between px-8 shadow-sm transition-all duration-300 ${
+            isCollapsed ? 'left-[80px]' : 'left-[280px]'
+        }`}>
             {/* Left Side */}
             <div className="flex items-center gap-4">
                 <button className="lg:hidden p-2.5 hover:bg-sky-50 rounded-xl transition-all">
