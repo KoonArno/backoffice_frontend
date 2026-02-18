@@ -11,18 +11,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldError, setFieldError] = useState<string | null>(null); // 'email' | 'password' | null
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldError(null);
     setIsLoading(true);
 
     try {
       await login(email, password);
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'เข้าสู่ระบบล้มเหลว');
+      const loginErr = err as Error & { field?: string };
+      setError(loginErr.message || 'เข้าสู่ระบบล้มเหลว');
+      setFieldError(loginErr.field || null);
     } finally {
       setIsLoading(false);
     }
@@ -51,8 +55,8 @@ export default function LoginPage() {
         <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
           <h2 className="text-xl font-semibold text-white mb-6">เข้าสู่ระบบ</h2>
 
-          {/* Error Message */}
-          {error && (
+          {/* General Error Message (when no specific field) */}
+          {error && !fieldError && (
             <div className="mb-6 flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-300 text-sm">
               <AlertCircle size={18} className="flex-shrink-0" />
               <span>{error}</span>
@@ -66,17 +70,23 @@ export default function LoginPage() {
                 อีเมล
               </label>
               <div className="relative">
-                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300/50" />
+                <Mail size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 ${fieldError === 'email' ? 'text-red-400' : 'text-blue-300/50'}`} />
                 <input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); if (fieldError === 'email') { setError(''); setFieldError(null); } }}
                   placeholder="admin@pharmacy.ac.th"
                   required
-                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-300/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                  className={`w-full pl-12 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-blue-300/30 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${fieldError === 'email' ? 'border-red-500/50 focus:ring-red-500/50' : 'border-white/10 focus:ring-blue-500/50'}`}
                 />
               </div>
+              {fieldError === 'email' && (
+                <p className="mt-2 text-sm text-red-400 flex items-center gap-1.5">
+                  <AlertCircle size={14} />
+                  {error}
+                </p>
+              )}
             </div>
 
             {/* Password Field */}
@@ -85,18 +95,24 @@ export default function LoginPage() {
                 รหัสผ่าน
               </label>
               <div className="relative">
-                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300/50" />
+                <Lock size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 ${fieldError === 'password' ? 'text-red-400' : 'text-blue-300/50'}`} />
                 <input
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); if (fieldError === 'password') { setError(''); setFieldError(null); } }}
                   placeholder="••••••••"
                   required
                   minLength={6}
-                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-300/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                  className={`w-full pl-12 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-blue-300/30 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${fieldError === 'password' ? 'border-red-500/50 focus:ring-red-500/50' : 'border-white/10 focus:ring-blue-500/50'}`}
                 />
               </div>
+              {fieldError === 'password' && (
+                <p className="mt-2 text-sm text-red-400 flex items-center gap-1.5">
+                  <AlertCircle size={14} />
+                  {error}
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
