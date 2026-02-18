@@ -96,7 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      throw new Error(data.error || data.message || 'เข้าสู่ระบบล้มเหลว');
+      const err = new Error(data.error || data.message || 'เข้าสู่ระบบล้มเหลว');
+      (err as Error & { field?: string }).field = data.field || null;
+      throw err;
     }
 
     const user: AdminUser = {
