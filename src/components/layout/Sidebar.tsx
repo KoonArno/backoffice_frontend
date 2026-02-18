@@ -8,31 +8,23 @@ import {
     BookOpen,
     CreditCard,
     Award,
-    HelpCircle,
     Settings,
     History,
     ChevronDown,
-    Plus,
-    Tags,
-    FileText,
-    Ticket,
-    MessageSquare,
-    Mail,
-    CreditCard as PaymentIcon,
-    Shield,
-    UserCog,
     Video,
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
+import { useAuth } from '@/features/auth/auth-context';
 
 interface MenuItem {
     name: string;
     href?: string;
     icon: React.ReactNode;
     children?: { name: string; href: string }[];
+    adminOnly?: boolean;
 }
 
 const menuItems: MenuItem[] = [
@@ -44,6 +36,7 @@ const menuItems: MenuItem[] = [
     {
         name: 'ผู้ใช้งาน',
         icon: <Users size={20} />,
+        adminOnly: true,
         children: [
             { name: 'บุคคลทั่วไป', href: '/users' },
             { name: 'เภสัชกร', href: '/users/pharmacists' },
@@ -66,6 +59,7 @@ const menuItems: MenuItem[] = [
     {
         name: 'การเงิน',
         icon: <CreditCard size={20} />,
+        adminOnly: true,
         children: [
             { name: 'คำสั่งซื้อ', href: '/payments/orders' },
             { name: 'รายการธุรกรรม', href: '/payments/transactions' },
@@ -76,11 +70,22 @@ const menuItems: MenuItem[] = [
         name: 'จัดการ CPE Credit',
         href: '/cpe-credits',
         icon: <Award size={20} />,
+        adminOnly: true,
     },
     {
         name: 'ประวัติการใช้งาน',
         href: '/audit-logs',
         icon: <History size={20} />,
+        adminOnly: true,
+    },
+    {
+        name: 'ตั้งค่า',
+        icon: <Settings size={20} />,
+        adminOnly: true,
+        children: [
+            { name: 'ทั่วไป', href: '/settings/general' },
+            { name: 'จัดการเจ้าหน้าที่', href: '/settings/officers' },
+        ],
     },
 ];
 
@@ -178,9 +183,16 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isMobileMenuOpen = false, onMobileMenuClose }: SidebarProps) {
+    const { isAdmin } = useAuth();
     // Initialize as false to match server render, update in useEffect
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [mounted, setMounted] = useState(false);
+
+    // Filter menu items based on role
+    const filteredMenuItems = menuItems.filter(item => {
+        if (item.adminOnly && !isAdmin) return false;
+        return true;
+    });
 
     // Read from localStorage after mount to avoid hydration mismatch
     useEffect(() => {
@@ -288,7 +300,7 @@ export default function Sidebar({ isMobileMenuOpen = false, onMobileMenuClose }:
                 {/* Menu */}
                 <nav className="flex-1 overflow-y-auto py-6 px-4">
                     <div className="space-y-2">
-                        {menuItems.map((item) => (
+                        {filteredMenuItems.map((item) => (
                             <MenuItemComponent key={item.name} item={item} isCollapsed={isCollapsed} />
                         ))}
                     </div>

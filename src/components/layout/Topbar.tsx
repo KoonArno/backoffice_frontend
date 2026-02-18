@@ -1,7 +1,8 @@
 'use client';
 
-import { Bell, Search, Menu, Moon, Sun, User } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Bell, Search, Menu, Moon, Sun, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '@/features/auth/auth-context';
 
 interface TopbarProps {
     onMobileMenuToggle?: () => void;
@@ -9,6 +10,7 @@ interface TopbarProps {
 
 export default function Topbar({ onMobileMenuToggle }: TopbarProps) {
     const [isDark, setIsDark] = useState(false);
+    const { user, logout, isAdmin } = useAuth();
 
     return (
         <header 
@@ -61,15 +63,24 @@ export default function Topbar({ onMobileMenuToggle }: TopbarProps) {
                     <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-gradient-to-br from-red-400 to-red-600 rounded-full border-2 border-white shadow-lg animate-pulse"></span>
                 </button>
 
-                {/* User Menu */}
-                <button className="flex items-center gap-2 md:gap-3 p-1.5 md:p-2 pl-2 md:pl-3 pr-2 md:pr-4 hover:bg-sky-50 rounded-2xl transition-all group border border-transparent hover:border-sky-100">
-                    <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-md group-hover:shadow-lg transition-all">
-                        A
+                {/* User Info */}
+                <div className="flex items-center gap-2 md:gap-3 p-1.5 md:p-2 pl-2 md:pl-3 pr-2 md:pr-4 rounded-2xl border border-transparent">
+                    <div className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-md ${isAdmin ? 'bg-gradient-to-br from-sky-400 to-blue-500' : 'bg-gradient-to-br from-emerald-400 to-teal-500'}`}>
+                        {user?.username?.charAt(0).toUpperCase() || 'A'}
                     </div>
                     <div className="text-left hidden xl:block">
-                        <p className="text-sm font-semibold text-slate-700">ผู้ดูแลระบบ</p>
-                        <p className="text-xs text-slate-500">Admin</p>
+                        <p className="text-sm font-semibold text-slate-700">{user?.username || 'ผู้ใช้'}</p>
+                        <p className="text-xs text-slate-500">{isAdmin ? 'Admin' : 'Officer'}</p>
                     </div>
+                </div>
+
+                {/* Logout Button */}
+                <button
+                    onClick={logout}
+                    className="p-2.5 md:p-3 hover:bg-red-50 rounded-xl transition-all hover:scale-110 group"
+                    title="ออกจากระบบ"
+                >
+                    <LogOut size={20} className="text-slate-600 group-hover:text-red-500 transition-colors" />
                 </button>
             </div>
         </header>
