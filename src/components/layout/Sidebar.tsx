@@ -98,7 +98,10 @@ function MenuItemComponent({ item, isCollapsed }: { item: MenuItem; isCollapsed:
     // ปิด submenu อัตโนมัติเมื่อย่อ sidebar
     useEffect(() => {
         if (isCollapsed) {
-            setIsOpen(false);
+            // ใช้ setTimeout เพื่อเลี่ยง error "cascading renders"
+            setTimeout(() => {
+                setIsOpen(false);
+            }, 0);
         }
     }, [isCollapsed]);
 
@@ -196,25 +199,35 @@ export default function Sidebar({ isMobileMenuOpen = false, onMobileMenuClose }:
 
     // Read from localStorage after mount to avoid hydration mismatch
     useEffect(() => {
-        const saved = localStorage.getItem('sidebar-collapsed');
-        if (saved === 'true') {
-            setIsCollapsed(true);
-        }
-        setMounted(true);
-    }, []);
+        if (!mounted) {
+            const saved = localStorage.getItem('sidebar-collapsed');
+            const initialCollapsed = saved === 'true';
+            
+            // ใช้ setTimeout เพื่อเลี่ยง error "cascading renders" 
+            // โดยให้ setState ทำงานในรอบถัดไปของ event loop
+            setTimeout(() => {
+                if (initialCollapsed) {
+                    setIsCollapsed(true);
+                }
+                setMounted(true);
+            }, 0);
 
-    // บันทึกสถานะลง localStorage และ update CSS variable
-    useEffect(() => {
-        if (mounted) {
-            localStorage.setItem('sidebar-collapsed', String(isCollapsed));
-            // Update CSS variable for topbar positioning
+            // Set initial CSS property
             document.documentElement.style.setProperty(
                 '--sidebar-width',
-                isCollapsed ? '80px' : '280px'
+                initialCollapsed ? '80px' : '280px'
             );
-            // ส่ง event เพื่อแจ้งให้ components อื่นรู้ว่า sidebar เปลี่ยนสถานะ
-            window.dispatchEvent(new Event('sidebar-toggle'));
+            return;
         }
+
+        // Handle subsequent updates
+        localStorage.setItem('sidebar-collapsed', String(isCollapsed));
+        document.documentElement.style.setProperty(
+            '--sidebar-width',
+            isCollapsed ? '80px' : '280px'
+        );
+        // ส่ง event เพื่อแจ้งให้ components อื่นรู้ว่า sidebar เปลี่ยนสถานะ
+        window.dispatchEvent(new Event('sidebar-toggle'));
     }, [isCollapsed, mounted]);
 
     // ป้องกัน body scroll เมื่อ mobile menu เปิด
