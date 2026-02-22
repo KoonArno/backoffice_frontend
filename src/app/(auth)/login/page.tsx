@@ -3,7 +3,8 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/auth-context';
-import { ShieldCheck, Mail, Lock, AlertCircle, Loader2, BookOpen, Users, Award, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Mail, Lock, AlertCircle, Loader2, BookOpen, Users, Award } from 'lucide-react';
+import { TextCaptchaModal } from '@/components/auth/TextCaptchaModal';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -17,57 +18,34 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Captcha states
-  const [requiresCaptcha, setRequiresCaptcha] = useState(true);
-  const [captchaSvg, setCaptchaSvg] = useState('');
-  const [captchaToken, setCaptchaToken] = useState('');
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [showCaptchaModal, setShowCaptchaModal] = useState(false);
 
-  const handleFetchCaptcha = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/v1/admin/auth/captcha`);
-      const data = await res.json();
-      if (data.success) {
-        setCaptchaSvg(data.svg);
-        setCaptchaToken(data.token);
-      }
-    } catch (error) {
-      console.error('Failed to fetch captcha', error);
-    }
-  };
-
+  // No longer fetching CAPTCHA on mount
   useEffect(() => {
-    handleFetchCaptcha();
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
     setFieldError(null);
+    setShowCaptchaModal(true);
+  };
 
-    // Check if CAPTCHA is required but not provided
-    if (requiresCaptcha && (!captchaAnswer || !captchaToken)) {
-      setError('กรุณากรอกรหัส CAPTCHA');
-      setFieldError('captcha');
-      setIsLoading(false);
-      return;
-    }
+  const handleCaptchaSuccess = async (answer: string, token: string) => {
+    setShowCaptchaModal(false);
+    setIsLoading(true);
 
     try {
-      await login(email, password, captchaAnswer, captchaToken);
+      await login(email, password, answer, token);
       router.push('/');
     } catch (err) {
       const loginErr = err as Error & { field?: string; requiresCaptcha?: boolean };
       setError(loginErr.message || 'เข้าสู่ระบบล้มเหลว');
       setFieldError(loginErr.field || null);
 
-      if (loginErr.requiresCaptcha) {
-        setRequiresCaptcha(true);
-        handleFetchCaptcha();
-        setCaptchaAnswer('');
-      } else if (requiresCaptcha && loginErr.message?.toLowerCase().includes('captcha')) {
-        handleFetchCaptcha();
-        setCaptchaAnswer('');
+      if (loginErr.message?.toLowerCase().includes('captcha')) {
+        // Re-open modal on CAPTCHA error
+        setShowCaptchaModal(true);
       }
     } finally {
       setIsLoading(false);
@@ -217,40 +195,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* CAPTCHA Section */}
-            {requiresCaptcha && (
-              <div className="space-y-4">
-                <label className="block text-sm font-semibold text-blue-200/80">
-                  กรุณากรอกรหัส CAPTCHA
-                </label>
-                
-                <div className="flex items-center gap-4">
-                  <div 
-                    className="flex-1 h-[50px] bg-white/5 border-2 border-white/10 rounded-xl overflow-hidden flex items-center justify-center"
-                    dangerouslySetInnerHTML={{ __html: captchaSvg }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleFetchCaptcha}
-                    className="p-3 bg-white/5 border-2 border-white/10 rounded-xl text-blue-300/50 hover:text-white hover:border-white/20 transition-all"
-                  >
-                    <RefreshCw size={20} />
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <AlertCircle size={20} className={`absolute left-4 top-1/2 -translate-y-1/2 ${fieldError === 'captcha' ? 'text-red-400' : 'text-blue-300/50'}`} />
-                  <input
-                    type="text"
-                    value={captchaAnswer}
-                    onChange={(e) => { setCaptchaAnswer(e.target.value); if (fieldError === 'captcha') { setError(''); setFieldError(null); } }}
-                    placeholder="รหัสที่เห็นในภาพ"
-                    required
-                    className={`w-full pl-12 pr-5 py-4 text-base bg-white/5 border-2 rounded-xl text-white placeholder-blue-300/30 focus:outline-none focus:ring-0 transition-all ${fieldError === 'captcha' ? 'border-red-400 focus:border-red-500' : 'border-white/10 focus:border-blue-400 hover:border-white/20'}`}
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Submit */}
             <button
@@ -275,6 +219,14 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {showCaptchaModal && (
+        <TextCaptchaModal
+          apiBase={API_BASE}
+          onSuccess={handleCaptchaSuccess}
+          onClose={() => setShowCaptchaModal(false)}
+        />
+      )}
     </div>
   );
 }
