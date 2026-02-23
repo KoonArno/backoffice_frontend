@@ -19,7 +19,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, captchaAnswer?: string, captchaToken?: string) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
   isOfficer: boolean;
@@ -48,7 +48,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr) as AdminUser;
-        setState({ user, token, isAuthenticated: true, isLoading: false });
+        
+        setTimeout(() => {
+          setState({ user, token, isAuthenticated: true, isLoading: false });
+        }, 0);
 
         // Verify token is still valid
         fetch(`${API_BASE}/v1/admin/auth/me`, {
@@ -67,37 +70,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 role: data.user.role,
               };
               localStorage.setItem(USER_KEY, JSON.stringify(verifiedUser));
-              setState({ user: verifiedUser, token, isAuthenticated: true, isLoading: false });
+              setTimeout(() => {
+                setState({ user: verifiedUser, token, isAuthenticated: true, isLoading: false });
+              }, 0);
             }
           })
           .catch(() => {
             // Token is invalid, clear everything
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(USER_KEY);
-            setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
+            setTimeout(() => {
+              setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
+            }, 0);
           });
       } catch {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
-        setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
+        setTimeout(() => {
+          setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
+        }, 0);
       }
     } else {
-      setState((prev) => ({ ...prev, isLoading: false }));
+      setTimeout(() => {
+        setState((prev) => ({ ...prev, isLoading: false }));
+      }, 0);
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, captchaAnswer?: string, captchaToken?: string) => {
     const res = await fetch(`${API_BASE}/v1/admin/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, captchaAnswer, captchaToken }),
     });
 
     const data = await res.json();
+    console.log('DEBUG: Auth API response:', { status: res.status, ok: res.ok, data });
 
     if (!res.ok || !data.success) {
       const err = new Error(data.error || data.message || 'เข้าสู่ระบบล้มเหลว');
-      (err as Error & { field?: string }).field = data.field || null;
+      // Pass along additional fields from API error
+      Object.assign(err, { 
+        field: data.field || null,
+        requiresCaptcha: data.requiresCaptcha || false 
+      });
+      console.log('DEBUG: Error object created:', { 
+        message: err.message, 
+        requiresCaptcha: (err as Error & { requiresCaptcha?: boolean }).requiresCaptcha 
+      });
       throw err;
     }
 
