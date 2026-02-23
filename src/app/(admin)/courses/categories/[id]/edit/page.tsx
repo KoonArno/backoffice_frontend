@@ -10,8 +10,8 @@ import type { Subcategory } from '@/features/courses/types/categories';
 
 interface SubcategoryItemProps {
     sub: Subcategory;
-    onUpdate: (id: string, name: string, description: string) => void;
-    onRemove: (id: string) => void;
+    onUpdate: (id: number | string, name: string, description: string) => void;
+    onRemove: (id: number | string) => void;
 }
 
 function SubcategoryItem({ sub, onUpdate, onRemove }: SubcategoryItemProps) {
@@ -112,49 +112,92 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
     ];
 
     useEffect(() => {
-        loadCategory();
-    }, [id]);
-
-    const loadCategory = async () => {
-        try {
-            const category = await categoryService.getCategoryById(id);
-            if (category) {
-                setName(category.name);
-                setDescription(category.description);
-                setColor(category.color);
-                setSubcategories(category.subcategories);
+        const fetchCategory = async () => {
+            try {
+                const category = await categoryService.getCategoryById(id);
+                if (category) {
+                    setName(category.name || '');
+                    setDescription(category.description || '');
+                    setColor(category.color || 'violet');
+                    setSubcategories((category.subcategories || []) as Subcategory[]);
+                }
+            } finally {
+                setLoading(false);
             }
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        fetchCategory();
+    }, [id]);
 
     const addSubcategory = () => {
         if (newSubName.trim()) {
-            setSubcategories([...subcategories, {
+            const tempSub: any = {
                 id: Date.now().toString(),
                 name: newSubName,
                 description: newSubDesc
-            }]);
+            };
+            setSubcategories([...subcategories, tempSub]);
             setNewSubName('');
             setNewSubDesc('');
         }
     };
 
-    const updateSubcategory = (subId: string, name: string, description: string) => {
+    const updateSubcategory = (subId: number | string, name: string, description: string) => {
         setSubcategories(subcategories.map(s =>
-            s.id === subId ? { ...s, name, description } : s
+            s.id.toString() === subId.toString() ? { ...s, name, description } : s
         ));
     };
 
-    const removeSubcategory = (subId: string) => {
-        setSubcategories(subcategories.filter(sub => sub.id !== subId));
+    const removeSubcategory = (subId: number | string) => {
+        setSubcategories(subcategories.filter(sub => sub.id.toString() !== subId.toString()));
     };
 
-    const handleSave = () => {
-        console.log('Update category:', { id, name, description, color, subcategories });
-        alert('อัพเดทหมวดหมู่สำเร็จ');
-        router.push(`/courses/categories/${id}`);
+    const handleSave = async () => {
+        try {
+            // 1. Update parent category
+            await categoryService.updateCategory(id, {
+                name,
+                description,
+                color,
+            });
+
+            // 2. Handle subcategories
+            // For simplicity in this backoffice, we'll just handle adds and updates.
+            // A more robust approach would track deletions, but let's stick to existing patterns.
+            const originalCategory = await categoryService.getCategoryById(id);
+            const originalSubIds = new Set(originalCategory?.subcategories?.map(s => s.id.toString()) || []);
+            
+            await Promise.all(
+                subcategories.map(sub => {
+                    const isNew = !originalSubIds.has(sub.id.toString()) || sub.id.toString().length > 10; // Simple heuristic for Date.now()
+                    if (isNew) {
+                        return categoryService.createCategory({
+                            name: sub.name,
+                            description: sub.description,
+                            parentId: Number(id)
+                        });
+                    } else {
+                        return categoryService.updateCategory(sub.id, {
+                            name: sub.name,
+                            description: sub.description
+                        });
+                    }
+                })
+            );
+
+            // Handle deletions
+            const currentSubIds = new Set(subcategories.map(s => s.id.toString()));
+            const deletedIds = [...originalSubIds].filter(oid => !currentSubIds.has(oid));
+            
+            if (deletedIds.length > 0) {
+                await Promise.all(deletedIds.map(did => categoryService.deleteCategory(did)));
+            }
+
+            alert('อัพเดทหมวดหมู่สำเร็จ');
+            router.push('/courses/categories');
+        } catch (error) {
+            console.error('Failed to update category:', error);
+            alert('อัพเดทหมวดหมู่ไม่สำเร็จ');
+        }
     };
 
     if (loading) {

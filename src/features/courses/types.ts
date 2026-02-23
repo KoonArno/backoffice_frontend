@@ -27,13 +27,15 @@ export type QuestionType =
 export interface Category {
     id: number;
     name: string;
+    description?: string;
+    color?: string;
     parentId?: number;
     parent?: Category;
     children?: Category[];
     // Display field
     courseCount?: number;
-    // Backward compatible
-    description?: string;
+    // Backward compatible subcategories alias if needed
+    subcategories?: Category[];
 }
 
 // ==========================================
@@ -165,9 +167,10 @@ export interface ExamSettings {
 }
 
 export interface Tag {
-    id: string;
+    id: number;
     name: string;
-    courseCount: number;
+    courseCount?: number;
+    createdAt?: string | Date;
 }
 
 // ==========================================
