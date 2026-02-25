@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useCourseForm } from '@/features/courses/hooks/useCourseForm';
 import { PricingSection } from '@/features/courses/components/CourseForm/PricingSection';
 import { Image as ImageIcon } from 'lucide-react';
-import { categoryService } from '@/features/courses/services/categoryService';
+import { courseService } from '@/features/courses/services/courseService';
 import type { Category } from '@/features/courses/types/categories';
 import { CourseVideoSection } from '@/features/courses/components/CourseForm/CourseVideoSection';
 
@@ -19,6 +19,7 @@ export default function AddCoursePage() {
         description, setDescription,
         details, setDetails,
         categoryId, setCategoryId,
+        subcategories, setSubcategories,
         courseType,
         setCourseType,
         uploadedVideos,
@@ -45,11 +46,11 @@ export default function AddCoursePage() {
 
     const handleCategoryChange = (categoryId: string) => {
         setCategoryId(categoryId);
-        setSelectedSubcategories([]); // Reset subcategories when category changes
+        setSubcategories([]); // Reset subcategories when category changes
     };
 
     const toggleSubcategory = (subId: string) => {
-        setSelectedSubcategories(prev =>
+        setSubcategories(prev =>
             prev.includes(subId)
                 ? prev.filter(id => id !== subId)
                 : [...prev, subId]
@@ -182,11 +183,11 @@ export default function AddCoursePage() {
                                 </label>
                                 <div className="border border-sky-200 rounded-xl p-3 max-h-48 overflow-y-auto bg-white">
                                     <div className="space-y-2">
-                                        {categories.find(c => c.id.toString() === selectedCategory.toString())?.subcategories?.map((sub) => (
+                                        {categories.find(c => c.id.toString() === categoryId.toString())?.subcategories?.map((sub) => (
                                             <label key={sub.id} className="flex items-center gap-2 cursor-pointer hover:bg-sky-50 p-2 rounded-lg transition-colors">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedSubcategories.includes(sub.id.toString())}
+                                                    checked={subcategories.includes(sub.id.toString())}
                                                     onChange={() => toggleSubcategory(sub.id.toString())}
                                                     className="w-4 h-4 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
                                                 />
