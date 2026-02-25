@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCourseForm } from '@/features/courses/hooks/useCourseForm';
@@ -14,9 +14,11 @@ import { CourseVideoSection } from '@/features/courses/components/CourseForm/Cou
 export default function AddCoursePage() {
     const router = useRouter();
     const [categories, setCategories] = useState<Category[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<string>('1');
-    const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
     const {
+        title, setTitle,
+        description, setDescription,
+        details, setDetails,
+        categoryId, setCategoryId,
         courseType,
         setCourseType,
         uploadedVideos,
@@ -24,19 +26,25 @@ export default function AddCoursePage() {
         handleDeleteVideo,
         previewVideoId,
         handleSetPreviewVideo,
+        createCourse,
+        status, setStatus,
     } = useCourseForm();
 
-    useEffect(() => {
-        loadCategories();
-    }, []);
-
     const loadCategories = async () => {
-        const cats = await categoryService.getCategories();
-        setCategories(cats);
+        const response = await courseService.getCategories();
+        setCategories(response.categories);
     };
 
+    useEffect(() => {
+        // Use setTimeout to avoid synchronous setState inside effect warning
+        const timer = setTimeout(() => {
+            void loadCategories();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, []);
+
     const handleCategoryChange = (categoryId: string) => {
-        setSelectedCategory(categoryId);
+        setCategoryId(categoryId);
         setSelectedSubcategories([]); // Reset subcategories when category changes
     };
 
@@ -48,17 +56,34 @@ export default function AddCoursePage() {
         );
     };
 
-    const handleCreate = () => {
-        // Mock API call to create course
-        const newCourseId = Math.floor(Math.random() * 1000) + 1000;
-        // Redirect to edit page
-        router.push(`/courses/${newCourseId}/edit`);
+    const [isCreating, setIsCreating] = useState(false);
+
+    const handleCreate = async () => {
+        if (!title || !description) {
+            alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
+            return;
+        }
+
+        setIsCreating(true);
+        try {
+            const result = await createCourse();
+            // The result structure might vary, let's assume it has the data in .data
+            const newCourse = result.data || result;
+            alert('สร้างคอร์สสำเร็จ');
+            router.push(`/courses/${newCourse.id}/edit`);
+        } catch (error) {
+            console.error('Failed to create course:', error);
+            alert('เกิดข้อผิดพลาดในการสร้างคอร์ส');
+        } finally {
+            setIsCreating(false);
+        }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleAddPreviewVideo = (video: any) => {
-        handleAddVideo(video);
+        handleAddVideo(video as any);
         // Auto select as preview if it's the first video or specifically uploaded here
-        handleSetPreviewVideo(video.id);
+        handleSetPreviewVideo(Number(video.id));
     };
 
     return (
@@ -80,10 +105,11 @@ export default function AddCoursePage() {
                     </Link>
                     <button
                         onClick={handleCreate}
-                        className="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-blue-500 text-white px-5 py-2.5 rounded-xl hover:shadow-lg transition-all text-sm font-semibold"
+                        disabled={isCreating}
+                        className="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-blue-500 text-white px-5 py-2.5 rounded-xl hover:shadow-lg transition-all text-sm font-semibold disabled:opacity-50"
                     >
-                        <span>ถัดไป: จัดการเนื้อหา</span>
-                        <ArrowRight size={18} />
+                        <span>{isCreating ? 'กำลังสร้างคอร์ส...' : 'ถัดไป: จัดการเนื้อหา'}</span>
+                        {!isCreating && <ArrowRight size={18} />}
                     </button>
                 </div>
             </div>
@@ -103,6 +129,8 @@ export default function AddCoursePage() {
                                 </label>
                                 <input
                                     type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
                                     className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
                                     placeholder="กรอกชื่อคอร์ส"
                                 />
@@ -113,6 +141,8 @@ export default function AddCoursePage() {
                                 </label>
                                 <textarea
                                     rows={3}
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
                                     className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
                                     placeholder="คำอธิบายสั้นๆ เกี่ยวกับคอร์ส"
                                 />
@@ -123,6 +153,8 @@ export default function AddCoursePage() {
                                 </label>
                                 <textarea
                                     rows={6}
+                                    value={details}
+                                    onChange={(e) => setDetails(e.target.value)}
                                     className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
                                     placeholder="รายละเอียดเนื้อหาของคอร์ส"
                                 />
@@ -133,10 +165,11 @@ export default function AddCoursePage() {
                                         หมวดหมู่หลัก <span className="text-red-500">*</span>
                                     </label>
                                     <select
-                                        value={selectedCategory}
+                                        value={categoryId}
                                         onChange={(e) => handleCategoryChange(e.target.value)}
                                         className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all bg-white"
                                     >
+                                        <option value="">เลือกหมวดหมู่</option>
                                         {categories.map((cat) => (
                                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}
@@ -149,12 +182,12 @@ export default function AddCoursePage() {
                                 </label>
                                 <div className="border border-sky-200 rounded-xl p-3 max-h-48 overflow-y-auto bg-white">
                                     <div className="space-y-2">
-                                        {categories.find(c => c.id === selectedCategory)?.subcategories.map((sub) => (
+                                        {categories.find(c => c.id.toString() === selectedCategory.toString())?.subcategories?.map((sub) => (
                                             <label key={sub.id} className="flex items-center gap-2 cursor-pointer hover:bg-sky-50 p-2 rounded-lg transition-colors">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedSubcategories.includes(sub.id)}
-                                                    onChange={() => toggleSubcategory(sub.id)}
+                                                    checked={selectedSubcategories.includes(sub.id.toString())}
+                                                    onChange={() => toggleSubcategory(sub.id.toString())}
                                                     className="w-4 h-4 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
                                                 />
                                                 <div>
@@ -212,9 +245,14 @@ export default function AddCoursePage() {
                             <h2 className="text-xl font-bold text-slate-800">สถานะ</h2>
                         </div>
                         <div className="p-6">
-                            <select className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all bg-white">
-                                <option value="draft">ฉบับร่าง</option>
-                                <option value="published">เผยแพร่</option>
+                            <select 
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value as any)}
+                                className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all bg-white"
+                            >
+                                <option value="DRAFT">ฉบับร่าง</option>
+                                <option value="PUBLISHED">เผยแพร่</option>
+                                <option value="ARCHIVED">เก็บถาวร</option>
                             </select>
                         </div>
                     </div>

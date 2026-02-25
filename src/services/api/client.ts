@@ -18,13 +18,13 @@ class ApiClient {
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         // Get auth token from localStorage
-        const token = typeof window !== 'undefined' ? localStorage.getItem('backoffice_token') : null;
+        const token = typeof window !== 'undefined' ? sessionStorage.getItem('backoffice_token') : null;
 
         try {
             const response = await fetch(`${this.baseURL}${endpoint}`, {
                 ...options,
                 headers: {
-                    'Content-Type': 'application/json',
+                    ...(options?.body ? { 'Content-Type': 'application/json' } : {}),
                     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
                     ...options?.headers,
                 },
@@ -36,8 +36,8 @@ class ApiClient {
             if (response.status === 401) {
                 // Token expired or invalid — clear auth and redirect
                 if (typeof window !== 'undefined') {
-                    localStorage.removeItem('backoffice_token');
-                    localStorage.removeItem('backoffice_user');
+                    sessionStorage.removeItem('backoffice_token');
+                    sessionStorage.removeItem('backoffice_user');
                     window.location.href = '/login';
                 }
                 throw new Error('Unauthorized');

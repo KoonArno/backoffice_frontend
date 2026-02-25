@@ -23,8 +23,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const { id } = use(params);
     const [activeTab, setActiveTab] = useState('basic'); // basic, curriculum, assessment, settings
     const [categories, setCategories] = useState<Category[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<string>('1');
-    const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>(['1-1', '1-2']);
     const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
 
     // Destructure useCourseForm
@@ -76,17 +74,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         // Preview Video
         previewVideoId,
         handleSetPreviewVideo,
+        status, setStatus,
     } = useCourseForm(id);
-
-    // Mock Fetch Data
-    useEffect(() => {
-        // Simulate fetching course data
-        setTitle('เภสัชศาสตร์คลินิก: การดูแลผู้ป่วยโรคเรื้อรัง');
-        setDescription('คอร์สนี้จะสอนเกี่ยวกับการดูแลผู้ป่วยโรคเรื้อรัง');
-        setDetails('คอร์สนี้จะสอนเกี่ยวกับการดูแลผู้ป่วยโรคเรื้อรัง...');
-        setCategoryId('1');
-        setSubcategories(['1-1', '1-2']);
-    }, []);
 
     useEffect(() => {
         loadCategories();
@@ -209,7 +198,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         </label>
                                         <input
                                             type="text"
-                                            defaultValue="เภสัชศาสตร์คลินิก: การดูแลผู้ป่วยโรคเรื้อรัง"
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
                                             className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
                                         />
                                     </div>
@@ -219,7 +209,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         </label>
                                         <textarea
                                             rows={3}
-                                            defaultValue="คอร์สนี้จะสอนเกี่ยวกับการดูแลผู้ป่วยโรคเรื้อรัง"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
                                             className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
                                         />
                                     </div>
@@ -229,7 +220,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         </label>
                                         <textarea
                                             rows={6}
-                                            defaultValue="คอร์สนี้จะสอนเกี่ยวกับการดูแลผู้ป่วยโรคเรื้อรัง..."
+                                            value={details}
+                                            onChange={(e) => setDetails(e.target.value)}
                                             className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all"
                                         />
                                     </div>
@@ -239,10 +231,11 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                                 หมวดหมู่หลัก <span className="text-red-500">*</span>
                                             </label>
                                             <select
-                                                value={selectedCategory}
+                                                value={categoryId}
                                                 onChange={(e) => handleCategoryChange(e.target.value)}
                                                 className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all bg-white"
                                             >
+                                                <option value="">เลือกหมวดหมู่</option>
                                                 {categories.map((cat) => (
                                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                                                 ))}
@@ -256,12 +249,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         </label>
                                         <div className="border border-sky-200 rounded-xl p-3 max-h-48 overflow-y-auto bg-white">
                                             <div className="space-y-2">
-                                                {categories.find(c => c.id === selectedCategory)?.subcategories.map((sub) => (
+                                                {categories.find(c => c.id.toString() === categoryId.toString())?.subcategories?.map((sub) => (
                                                     <label key={sub.id} className="flex items-center gap-2 cursor-pointer hover:bg-sky-50 p-2 rounded-lg transition-colors">
                                                         <input
                                                             type="checkbox"
-                                                            checked={selectedSubcategories.includes(sub.id)}
-                                                            onChange={() => toggleSubcategory(sub.id)}
+                                                            checked={subcategories.includes(sub.id.toString())}
+                                                            onChange={() => toggleSubcategory(sub.id.toString())}
                                                             className="w-4 h-4 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
                                                         />
                                                         <div>
@@ -418,14 +411,16 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                             </div>
                             <div className="p-6">
                                 <select
-                                    defaultValue="published"
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value as any)}
                                     className="w-full px-4 py-3 border border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all bg-white"
                                 >
-                                    <option value="draft">ฉบับร่าง (Draft)</option>
-                                    <option value="published">เผยแพร่ (Published)</option>
+                                    <option value="DRAFT">ฉบับร่าง (Draft)</option>
+                                    <option value="PUBLISHED">เผยแพร่ (Published)</option>
+                                    <option value="ARCHIVED">เก็บถาวร (Archived)</option>
                                 </select>
                                 <p className="mt-2 text-sm text-slate-500">
-                                    * สถานะ "เผยแพร่" จะทำให้ผู้เรียนสามารถมองเห็นและสมัครเรียนคอร์สนี้ได้
+                                    * สถานะ &quot;เผยแพร่&quot; จะทำให้ผู้เรียนสามารถมองเห็นและสมัครเรียนคอร์สนี้ได้
                                 </p>
                             </div>
                         </div>

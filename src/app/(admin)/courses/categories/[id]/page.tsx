@@ -23,10 +23,9 @@ export default function CategoryDetailPage({ params }: { params: Promise<{ id: s
 
             if (cat) {
                 const { courses: allCourses } = await courseService.getCourses();
-                // Filter courses that belong to this category or its subcategories
-                const subcategoryIds = new Set(cat.subcategories?.map(s => s.id) || []);
+                // Filter courses that belong to this category
                 const filtered = allCourses.filter(c => 
-                    c.categoryId === cat.id || (c.categoryId && subcategoryIds.has(c.categoryId as number))
+                    c.categoryId?.toString() === cat.id.toString()
                 );
                 setCourses(filtered);
             }
@@ -42,7 +41,7 @@ export default function CategoryDetailPage({ params }: { params: Promise<{ id: s
     }, [loadData]);
 
     const filteredCourses = selectedSubcategory 
-        ? courses.filter(c => c.categoryId?.toString() === selectedSubcategory.toString())
+        ? courses.filter(c => c.subcategoryId?.toString() === selectedSubcategory.toString())
         : courses;
 
     if (loading) {
@@ -139,7 +138,7 @@ export default function CategoryDetailPage({ params }: { params: Promise<{ id: s
                         <div className="p-6 flex-1">
                             <div className="mb-4">
                                 <span className="px-2 py-1 bg-violet-50 text-violet-600 text-[10px] font-black uppercase rounded-md mb-2 inline-block">
-                                    {(course as any).subcategory || category.name}
+                                    {course.subcategory?.name || category.name}
                                 </span>
                                 <h3 className="font-bold text-slate-800 text-lg group-hover:text-violet-600 transition-colors line-clamp-2">
                                     {course.title}

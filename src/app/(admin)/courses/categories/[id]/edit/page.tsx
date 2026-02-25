@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { categoryService } from '@/features/courses/services/categoryService';
-import type { Subcategory } from '@/features/courses/types/categories';
+import type { Subcategory } from '@/features/courses/types';
 
 interface SubcategoryItemProps {
     sub: Subcategory;
@@ -130,10 +130,11 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
 
     const addSubcategory = () => {
         if (newSubName.trim()) {
-            const tempSub: any = {
-                id: Date.now().toString(),
+            const tempSub: Subcategory = {
+                id: Date.now(),
+                categoryId: Number(id),
                 name: newSubName,
-                description: newSubDesc
+                description: newSubDesc,
             };
             setSubcategories([...subcategories, tempSub]);
             setNewSubName('');
@@ -161,42 +162,36 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
             });
 
             // 2. Handle subcategories
-            // For simplicity in this backoffice, we'll just handle adds and updates.
-            // A more robust approach would track deletions, but let's stick to existing patterns.
             const originalCategory = await categoryService.getCategoryById(id);
             const originalSubIds = new Set(originalCategory?.subcategories?.map(s => s.id.toString()) || []);
-            
-            await Promise.all(
-                subcategories.map(sub => {
-                    const isNew = !originalSubIds.has(sub.id.toString()) || sub.id.toString().length > 10; // Simple heuristic for Date.now()
+            const currentSubIds = new Set(subcategories.map(s => s.id.toString()));
+
+            await Promise.all([
+                // Create or Update
+                ...subcategories.map(sub => {
+                    const isNew = !originalSubIds.has(sub.id.toString()) || sub.id.toString().length > 10;
                     if (isNew) {
-                        return categoryService.createCategory({
+                        return categoryService.createSubcategory({
+                            categoryId: Number(id),
                             name: sub.name,
                             description: sub.description,
-                            parentId: Number(id)
                         });
                     } else {
-                        return categoryService.updateCategory(sub.id, {
+                        return categoryService.updateSubcategory(sub.id, {
                             name: sub.name,
-                            description: sub.description
+                            description: sub.description,
                         });
                     }
-                })
-            );
+                }),
+                // Delete
+                ...[...originalSubIds].filter(oid => !currentSubIds.has(oid)).map(did => 
+                    categoryService.deleteSubcategory(did)
+                )
+            ]);
 
-            // Handle deletions
-            const currentSubIds = new Set(subcategories.map(s => s.id.toString()));
-            const deletedIds = [...originalSubIds].filter(oid => !currentSubIds.has(oid));
-            
-            if (deletedIds.length > 0) {
-                await Promise.all(deletedIds.map(did => categoryService.deleteCategory(did)));
-            }
-
-            alert('อัพเดทหมวดหมู่สำเร็จ');
             router.push('/courses/categories');
         } catch (error) {
             console.error('Failed to update category:', error);
-            alert('อัพเดทหมวดหมู่ไม่สำเร็จ');
         }
     };
 

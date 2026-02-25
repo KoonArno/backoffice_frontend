@@ -6,13 +6,11 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { categoryService } from '@/features/courses/services/categoryService';
-import type { Category, Tag } from '@/features/courses/types';
-import { TagCloud } from '@/features/courses/components/TagCloud';
+import type { Category } from '@/features/courses/types';
 
 export default function CategoriesPage() {
     const router = useRouter();
     const [categories, setCategories] = useState<Category[]>([]);
-    const [tags, setTags] = useState<Tag[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -22,14 +20,10 @@ export default function CategoriesPage() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [categoriesData, tagsData] = await Promise.all([
-                categoryService.getCategories(),
-                categoryService.getTags()
-            ]);
+            const categoriesData = await categoryService.getCategories();
             setCategories(categoriesData);
-            setTags(tagsData);
         } catch (error) {
-            console.error('Failed to load categories/tags:', error);
+            console.error('Failed to load categories:', error);
         } finally {
             setLoading(false);
         }
@@ -42,30 +36,7 @@ export default function CategoriesPage() {
             await categoryService.deleteCategory(id);
             await loadData();
         } catch {
-            alert('ลบหมวดหมู่ไม่สำเร็จ');
-        }
-    };
-
-    const handleAddTag = async () => {
-        const name = window.prompt('ป้อนชื่อแท็กใหม่:');
-        if (!name) return;
-
-        try {
-            await categoryService.createTag(name);
-            await loadData();
-        } catch {
-            alert('เพิ่มแท็กไม่สำเร็จ');
-        }
-    };
-
-    const handleDeleteTag = async (id: number | string) => {
-        if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบแท็กนี้?')) return;
-
-        try {
-            await categoryService.deleteTag(id);
-            await loadData();
-        } catch {
-            alert('ลบแท็กไม่สำเร็จ');
+            console.error('Failed to delete category');
         }
     };
 
@@ -78,7 +49,7 @@ export default function CategoriesPage() {
             {/* Page Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 mb-1">หมวดหมู่และแท็ก</h1>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-1">หมวดหมู่คอร์สเรียน</h1>
                     <p className="text-slate-500">จัดการโครงสร้างคอร์สและการจัดกลุ่มข้อมูล</p>
                 </div>
                 <Link
@@ -90,9 +61,9 @@ export default function CategoriesPage() {
                 </Link>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-8">
                 {/* Categories Table */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6">
                     <div className="bg-white rounded-2xl shadow-md border border-violet-100 overflow-hidden">
                         <div className="p-6 border-b border-violet-50 bg-slate-50/50">
                             <h2 className="font-bold text-slate-800 flex items-center gap-2">
@@ -139,14 +110,14 @@ export default function CategoriesPage() {
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {category.subcategories && category.subcategories.length > 0 ? (
                                                             <>
-                                                                {category.subcategories.slice(0, 2).map((sub) => (
+                                                                 {category.subcategories.slice(0, 3).map((sub) => (
                                                                     <span key={sub.id} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-md text-[10px] font-bold">
                                                                         {sub.name}
                                                                     </span>
-                                                                ))}
-                                                                {category.subcategories.length > 2 && (
+                                                                 ))}
+                                                                {category.subcategories.length > 3 && (
                                                                     <span className="px-2 py-1 bg-violet-50 text-violet-600 rounded-md text-[10px] font-bold">
-                                                                        +{category.subcategories.length - 2}
+                                                                        +{category.subcategories.length - 3}
                                                                     </span>
                                                                 )}
                                                             </>
@@ -185,15 +156,6 @@ export default function CategoriesPage() {
                             </table>
                         </div>
                     </div>
-                </div>
-
-                {/* Sidebar - Tags */}
-                <div>
-                    <TagCloud 
-                        tags={tags} 
-                        onAdd={handleAddTag}
-                        onDelete={(id) => handleDeleteTag(id)}
-                    />
                 </div>
             </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Video, Search, Folder, PlayCircle } from 'lucide-react';
-import { LoadingSpinner, ErrorMessage } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import { categoryService } from '@/features/courses/services/categoryService';
 import type { Category } from '@/features/courses/types/categories';
 import Link from 'next/link';
@@ -28,7 +28,7 @@ export default function VideosPage() {
 
     const filteredCategories = categories.filter(cat =>
         cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (cat.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
     );
 
     const getCategoryColorClass = (color: string) => {
@@ -81,11 +81,11 @@ export default function VideosPage() {
                         href={`/videos/category/${category.id}`}
                         className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
                     >
-                        <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${getCategoryColorClass(category.color)} opacity-10 rounded-bl-full group-hover:scale-110 transition-transform`} />
+                        <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${getCategoryColorClass(category.color || 'slate')} opacity-10 rounded-bl-full group-hover:scale-110 transition-transform`} />
 
                         <div className="flex items-start justify-between mb-4">
-                            <div className={`w-14 h-14 rounded-2xl bg-${category.color}-50 flex items-center justify-center group-hover:scale-105 transition-transform`}>
-                                <Folder size={28} className={`text-${category.color}-600`} />
+                            <div className={`w-14 h-14 rounded-2xl bg-${category.color || 'slate'}-50 flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                                <Folder size={28} className={`text-${category.color || 'slate'}-600`} />
                             </div>
                             <span className="px-3 py-1 bg-slate-50 text-slate-600 text-xs font-semibold rounded-full border border-slate-100">
                                 {category.courseCount} คอร์ส

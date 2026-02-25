@@ -141,21 +141,19 @@ export default function AddCategoryPage() {
             // 2. Create subcategories if any
             if (subcategories.length > 0) {
                 await Promise.all(
-                    subcategories.map(sub => 
-                        categoryService.createCategory({
+                    subcategories.map(sub =>
+                        categoryService.createSubcategory({
                             name: sub.name,
                             description: sub.description,
-                            parentId: parent.id
+                            categoryId: Number(parent.id)
                         })
                     )
                 );
             }
 
-            alert('บันทึกหมวดหมู่สำเร็จ');
             router.push('/courses/categories');
         } catch (error) {
             console.error('Failed to save category:', error);
-            alert('บันทึกหมวดหมู่ไม่สำเร็จ');
         }
     };
 
