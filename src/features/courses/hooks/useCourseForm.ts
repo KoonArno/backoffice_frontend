@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Question, QuestionType, ExamType, QuestionOption, ExamSettings, VideoQuestion, Lesson } from '../types';
 import type { Video as VideoType } from '@/features/videos/types';
 import { courseService } from '../services/courseService';
@@ -24,24 +24,7 @@ export function useCourseForm(courseId?: string) {
     const [uploadedVideos, setUploadedVideos] = useState<VideoType[]>([]);
 
     // Lessons using the uploaded videos
-    const [lessons, setLessons] = useState<FormLesson[]>([
-        {
-            id: '1',
-            title: 'บทนำ: ภาพรวมของคอร์ส',
-            duration: '05:30',
-            description: 'แนะนำเนื้อหาที่จะได้เรียนในคอร์สนี้และวัตถุประสงค์การเรียนรู้',
-            videoQuestions: [],
-            videoId: null
-        },
-        {
-            id: '2',
-            title: 'พื้นฐานการดูแลผู้ป่วย',
-            duration: '15:45',
-            description: 'หลักการพื้นฐานในการดูแลผู้ป่วยโรคเรื้อรังที่บ้าน',
-            videoQuestions: [],
-            videoId: null
-        }
-    ]);
+    const [lessons, setLessons] = useState<FormLesson[]>([]);
 
     const [courseType, setCourseType] = useState('paid');
     const [ceEnabled, setCeEnabled] = useState(false);
@@ -186,9 +169,40 @@ export function useCourseForm(courseId?: string) {
     const [details, setDetails] = useState(''); // รายละเอียดคอร์ส
     const [categoryId, setCategoryId] = useState<string>('1');
     const [subcategories, setSubcategories] = useState<string[]>([]);
+    const [status, setStatus] = useState<'DRAFT' | 'PUBLISHED' | 'ARCHIVED'>('DRAFT');
 
     // Load initial data if editing
-    // useEffect(() => { if(courseId) { ... load course ... } }, [courseId]);
+    useEffect(() => {
+        if (courseId) {
+            courseService.getCourse(courseId).then(data => {
+                setTitle(data.title || '');
+                setDescription(data.description || '');
+                setDetails(data.details || '');
+                setCategoryId(data.categoryId?.toString() || '1');
+                setCourseType(data.price && Number(data.price) > 0 ? 'paid' : 'free');
+                setPreviewVideoId(data.previewVideoId);
+                setStatus(data.status || 'DRAFT');
+                // Maps lessons and other data as needed
+                if (data.lessons) {
+                    setLessons(data.lessons);
+                }
+            });
+        }
+    }, [courseId]);
+
+    const createCourse = async () => {
+        const payload = {
+            title,
+            description,
+            details,
+            categoryId: parseInt(categoryId, 10),
+            price: courseType === 'free' ? 0 : 0, // Default price 0 for now, should be from UI
+            previewVideoId,
+            status,
+        };
+
+        return courseService.createCourse(payload);
+    };
 
     const saveCourse = async () => {
         if (!courseId) return;
@@ -197,21 +211,11 @@ export function useCourseForm(courseId?: string) {
             title,
             description,
             details, // Added details
-            categoryId,
-            subcategories,
-            lessons,
-            videos: uploadedVideos,
+            categoryId: parseInt(categoryId, 10),
             previewVideoId,
-            exams: [{
-                title: 'Final Exam',
-                questions: examQuestions,
-                ...examSettings
-            }],
-            settings: {
-                type: courseType,
-                ceEnabled,
-                status: 'published' // TODO: Add status state
-            }
+            status,
+            // lessons, // TODO: Implement lesson synchronization
+            // videos: uploadedVideos,
         };
 
         return courseService.updateCourse(courseId, payload);
@@ -227,6 +231,8 @@ export function useCourseForm(courseId?: string) {
 
         // Actions
         saveCourse,
+        createCourse,
+        status, setStatus,
 
         // Videos
         uploadedVideos,

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, Save, Plus, X, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { categoryService } from '@/features/courses/services/categoryService';
 
 interface SubcategoryItemProps {
     sub: { id: string; name: string; description: string };
@@ -128,10 +129,32 @@ export default function AddCategoryPage() {
         setSubcategories(subcategories.filter(sub => sub.id !== id));
     };
 
-    const handleSave = () => {
-        console.log('Save category:', { name, description, color, subcategories });
-        alert('บันทึกหมวดหมู่สำเร็จ');
-        router.push('/courses/categories');
+    const handleSave = async () => {
+        try {
+            // 1. Create parent category
+            const parent = await categoryService.createCategory({
+                name,
+                description,
+                color,
+            });
+
+            // 2. Create subcategories if any
+            if (subcategories.length > 0) {
+                await Promise.all(
+                    subcategories.map(sub =>
+                        categoryService.createSubcategory({
+                            name: sub.name,
+                            description: sub.description,
+                            categoryId: Number(parent.id)
+                        })
+                    )
+                );
+            }
+
+            router.push('/courses/categories');
+        } catch (error) {
+            console.error('Failed to save category:', error);
+        }
     };
 
     return (

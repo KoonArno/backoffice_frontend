@@ -1,19 +1,18 @@
-// Category types
+import type { Category, Course } from '../types';
+export type { Category } from '../types';
+
 export interface Subcategory {
-    id: string;
+    id: number;
+    categoryId: number;
     name: string;
     description?: string;
-}
-
-export interface Category {
-    id: string;
-    name: string;
-    description: string;
-    color: string;
-    subcategories: Subcategory[];
-    courseCount: number;
+    color?: string;
+    // Relations
+    category?: Category;
+    // Display field
+    courseCount?: number;
 }
 
 export interface CategoryWithCourses extends Category {
-    courses: any[]; // Will use Course type from courses
+    courses: Course[];
 }

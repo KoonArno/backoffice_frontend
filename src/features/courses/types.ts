@@ -27,13 +27,24 @@ export type QuestionType =
 export interface Category {
     id: number;
     name: string;
-    parentId?: number;
-    parent?: Category;
-    children?: Category[];
+    description?: string;
+    color?: string;
     // Display field
     courseCount?: number;
-    // Backward compatible
+    // Relations
+    subcategories?: Subcategory[];
+}
+
+export interface Subcategory {
+    id: number;
+    categoryId: number;
+    name: string;
     description?: string;
+    color?: string;
+    // Relations
+    category?: Category;
+    // Display field
+    courseCount?: number;
 }
 
 // ==========================================
@@ -43,6 +54,7 @@ export interface Category {
 export interface Course {
     id: number | string;
     categoryId?: number;
+    subcategoryId?: number;
     title: string;
     description?: string;
     authorName?: string;
@@ -60,6 +72,7 @@ export interface Course {
     updatedAt?: string | Date;
     // Relations
     category?: Category | string;
+    subcategory?: Subcategory;
     previewVideo?: Video;
     lessons?: Lesson[];
     exams?: Exam[];
@@ -71,9 +84,8 @@ export interface Course {
     instructor?: string;
     level?: 'beginner' | 'intermediate' | 'advanced';
     duration?: string;
-    tags?: string[];
     categories?: string[];
-    subcategories?: string[];
+    tags?: string[];
 }
 
 // ==========================================
@@ -164,11 +176,6 @@ export interface ExamSettings {
     timeLimit?: number;
 }
 
-export interface Tag {
-    id: string;
-    name: string;
-    courseCount: number;
-}
 
 // ==========================================
 // Stats & Data interfaces
@@ -189,7 +196,7 @@ export interface CoursesData {
 
 export interface CategoriesData {
     categories: Category[];
-    tags?: Tag[];
+    tags?: string[];
 }
 
 // ==========================================

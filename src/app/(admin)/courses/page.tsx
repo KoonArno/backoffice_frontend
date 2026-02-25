@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default function CoursesPage() {
     const router = useRouter();
-    const { courses, stats, isLoading, error } = useCourses();
+    const { courses, stats, isLoading, error, deleteCourse } = useCourses();
 
     if (isLoading) {
         return <LoadingSpinner message="กำลังโหลดข้อมูลคอร์ส..." />;
@@ -53,10 +53,15 @@ export default function CoursesPage() {
                     courses={courses}
                     onView={(id) => router.push(`/courses/${id}`)}
                     onEdit={(id) => router.push(`/courses/${id}/edit`)}
-                    onDelete={(id) => {
+                    onDelete={async (id) => {
                         if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบคอร์สนี้?')) {
-                            console.log('Delete course:', id);
-                            // TODO: Implement delete functionality
+                            try {
+                                await deleteCourse(id as number);
+                                alert('ลบคอร์สสำเร็จ');
+                            } catch (err) {
+                                console.error('Failed to delete course:', err);
+                                alert('เกิดข้อผิดพลาดในการลบคอร์ส');
+                            }
                         }
                     }}
                 />

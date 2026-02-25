@@ -26,15 +26,35 @@ export function useCourses() {
         fetchCourses();
     }, []);
 
+    const refresh = async () => {
+        setIsLoading(true);
+        try {
+            const coursesData = await courseService.getCourses();
+            setData(coursesData);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error('Failed to load courses'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const deleteCourse = async (id: number) => {
+        try {
+            await courseService.deleteCourse(id);
+            await refresh();
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error('Failed to delete course'));
+            throw err;
+        }
+    };
+
     return {
         courses: data?.courses || [],
         stats: data?.stats,
         isLoading,
         error,
-        refresh: () => {
-            setIsLoading(true);
-            courseService.getCourses().then(setData).finally(() => setIsLoading(false));
-        },
+        refresh,
+        deleteCourse,
     };
 }
 

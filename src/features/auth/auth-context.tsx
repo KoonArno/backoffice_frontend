@@ -42,8 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state from localStorage
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    const userStr = localStorage.getItem(USER_KEY);
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    const userStr = sessionStorage.getItem(USER_KEY);
 
     if (token && userStr) {
       try {
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email: data.user.email,
                 role: data.user.role,
               };
-              localStorage.setItem(USER_KEY, JSON.stringify(verifiedUser));
+              sessionStorage.setItem(USER_KEY, JSON.stringify(verifiedUser));
               setTimeout(() => {
                 setState({ user: verifiedUser, token, isAuthenticated: true, isLoading: false });
               }, 0);
@@ -77,15 +77,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           })
           .catch(() => {
             // Token is invalid, clear everything
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem(USER_KEY);
+            sessionStorage.removeItem(TOKEN_KEY);
+            sessionStorage.removeItem(USER_KEY);
             setTimeout(() => {
               setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
             }, 0);
           });
       } catch {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(USER_KEY);
         setTimeout(() => {
           setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
         }, 0);
@@ -128,15 +128,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role: data.user.role,
     };
 
-    localStorage.setItem(TOKEN_KEY, data.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    sessionStorage.setItem(TOKEN_KEY, data.token);
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
 
     setState({ user, token: data.token, isAuthenticated: true, isLoading: false });
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
     setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
     router.push('/login');
   }, [router]);

@@ -41,9 +41,9 @@ function getProviderLabel(provider: VideoProvider): string {
 }
 
 export function VideosTable({ videos, categories = [], onView, onEdit, onDelete }: VideosTableProps) {
-    const getCategory = (id?: string) => {
+    const getCategory = (id?: string | number) => {
         if (!id) return null;
-        return categories.find(c => c.id === id);
+        return categories.find(c => c.id.toString() === id.toString());
     };
 
     const getCategoryColor = (color?: string) => {
