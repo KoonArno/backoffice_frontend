@@ -13,7 +13,7 @@ import {
     ChevronDown,
     Video,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';

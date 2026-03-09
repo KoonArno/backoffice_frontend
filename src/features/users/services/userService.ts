@@ -1,31 +1,39 @@
 import { apiClient } from '@/services/api/client';
 import type { User, Pharmacist, UserStats, PharmacistStats, UsersData, PharmacistsData } from '../types';
 
+interface RawUser {
+    id: number;
+    fullName: string;
+    email: string;
+    failedAttempts: number;
+    createdAt: string;
+    courseCount: number;
+}
+
+interface RawPharmacist extends RawUser {
+    professionalLicenseNumber: string;
+}
+
 export const userService = {
     /**
      * Fetch all general users
      */
-    async getUsers(): Promise<UsersData> {
+    async getUsers(page: number = 1, limit: number = 20, search?: string, status?: 'active' | 'inactive'): Promise<UsersData> {
         try {
-            // In production: const response = await apiClient.get<UsersData>('/users');
-            // return response.data;
+            const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+            const statusParam = status ? `&status=${status}` : '';
+            const response = await apiClient.get<{ users: RawUser[], stats: UserStats }>(`/users?role=member&page=${page}&limit=${limit}${searchParam}${statusParam}`);
+            
+            const users: User[] = response.data.users.map(u => ({
+                id: u.id.toString(),
+                name: u.fullName || 'ไม่ระบุชื่อ',
+                email: u.email,
+                status: u.failedAttempts < 5 ? 'active' : 'inactive',
+                joined: new Date(u.createdAt),
+                courses: u.courseCount || 0,
+            }));
 
-            // Mock data for now
-            const users: User[] = [
-                { id: '1', name: 'สมชาย ใจดี', email: 'somchai@email.com', status: 'active', joined: new Date('2024-01-15'), courses: 3 },
-                { id: '2', name: 'สมหญิง รักเรียน', email: 'somying@email.com', status: 'active', joined: new Date('2024-01-20'), courses: 5 },
-                { id: '3', name: 'วิภา มานะ', email: 'vipa@email.com', status: 'inactive', joined: new Date('2024-01-25'), courses: 1 },
-                { id: '4', name: 'ณัฐพล เก่งมาก', email: 'nattapol@email.com', status: 'active', joined: new Date('2024-01-28'), courses: 8 },
-                { id: '5', name: 'ปิยะ รักดี', email: 'piya@email.com', status: 'active', joined: new Date('2024-02-01'), courses: 2 },
-            ];
-
-            const stats: UserStats = {
-                total: 5234,
-                active: 4892,
-                inactive: 342,
-            };
-
-            return { users, stats };
+            return { users, stats: response.data.stats };
         } catch (error) {
             console.error('Failed to fetch users:', error);
             throw error;
@@ -35,27 +43,31 @@ export const userService = {
     /**
      * Fetch all pharmacists
      */
-    async getPharmacists(): Promise<PharmacistsData> {
+    async getPharmacists(page: number = 1, limit: number = 20, search?: string, status?: 'active' | 'inactive'): Promise<PharmacistsData> {
         try {
-            // In production: const response = await apiClient.get<PharmacistsData>('/users/pharmacists');
-            // return response.data;
-
-            // Mock data for now
-            const pharmacists: Pharmacist[] = [
-                { id: '1', name: 'ภก.สุรชัย เก่งมาก', email: 'surachai@email.com', license: 'ภ.12345', status: 'active', verificationStatus: 'verified', cpeCredits: 25, courses: 6, joined: new Date('2024-01-10') },
-                { id: '2', name: 'ภญ.วิภา รักการสอน', email: 'vipa@email.com', license: 'ภ.23456', status: 'active', verificationStatus: 'verified', cpeCredits: 18, courses: 4, joined: new Date('2024-01-15') },
-                { id: '3', name: 'ภก.ณัฐพล มีความรู้', email: 'nattapol@email.com', license: 'ภ.34567', status: 'active', verificationStatus: 'verified', cpeCredits: 32, courses: 8, joined: new Date('2024-01-20') },
-                { id: '4', name: 'ภญ.ปิยะ ใจดี', email: 'piya@email.com', license: 'ภ.45678', status: 'active', verificationStatus: 'verified', cpeCredits: 12, courses: 3, joined: new Date('2024-01-25') },
-                { id: '5', name: 'ภก.สมชาย รักเรียน', email: 'somchai@email.com', license: 'ภ.56789', status: 'active', verificationStatus: 'verified', cpeCredits: 45, courses: 10, joined: new Date('2024-02-01') },
-            ];
+            const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+            const statusParam = status ? `&status=${status}` : '';
+            const response = await apiClient.get<{ users: RawPharmacist[], stats: PharmacistStats }>(`/users?role=pharmacist&page=${page}&limit=${limit}${searchParam}${statusParam}`);
+            
+            const pharmacists: Pharmacist[] = response.data.users.map(u => ({
+                id: u.id.toString(),
+                name: u.fullName || 'ไม่ระบุชื่อ',
+                email: u.email,
+                license: u.professionalLicenseNumber || '-',
+                status: u.failedAttempts < 5 ? 'active' : 'inactive',
+                verificationStatus: 'verified', // Placeholder as requested, no CPE logic yet
+                cpeCredits: 0, 
+                courses: u.courseCount || 0,
+                joined: new Date(u.createdAt),
+            }));
 
             const stats: PharmacistStats = {
-                total: 7611,
-                active: 7456,
-                inactive: 155,
-                verified: 7456,
-                totalCpeCredits: 186400,
-                averageCpeCredits: 25,
+                total: response.data.stats.total,
+                active: response.data.stats.active,
+                inactive: response.data.stats.inactive,
+                verified: response.data.stats.active, // Placeholder
+                totalCpeCredits: 0,
+                averageCpeCredits: 0,
             };
 
             return { pharmacists, stats };
