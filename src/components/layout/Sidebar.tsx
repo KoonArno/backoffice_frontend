@@ -40,6 +40,7 @@ const menuItems: MenuItem[] = [
         children: [
             { name: 'บุคคลทั่วไป', href: '/users' },
             { name: 'เภสัชกร', href: '/users/pharmacists' },
+            { name: 'ผู้ดูแลระบบ', href: '/users/admins' },
         ],
     },
     {
@@ -186,14 +187,15 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isMobileMenuOpen = false, onMobileMenuClose }: SidebarProps) {
-    const { isAdmin } = useAuth();
+    const { isAdmin, role } = useAuth();
     // Initialize as false to match server render, update in useEffect
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     // Filter menu items based on role
     const filteredMenuItems = menuItems.filter(item => {
-        if (item.adminOnly && !isAdmin) return false;
+        const userIsAdmin = isAdmin || role === 'super_admin' || role === 'admin';
+        if (item.adminOnly && !userIsAdmin) return false;
         return true;
     });
 

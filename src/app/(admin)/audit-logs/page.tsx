@@ -8,6 +8,7 @@ import type { AuditLog, PaginatedAuditLogs } from '@/features/audit-logs/types';
 import type { PaginatedAdminLoginLogs } from '@/features/admin-auth/types/login-logs';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
+import { parseDbDate } from '@/utils/date';
 
 const ACTION_MAP: Record<string, string> = {
     'CREATE_COURSE': 'สร้างคอร์สใหม่',
@@ -190,7 +191,7 @@ export default function AuditLogsPage() {
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-slate-500 shrink-0">
                                         <Clock size={14} />
-                                        <span>{format(new Date(log.createAt), 'dd MMM yyyy HH:mm', { locale: th })}</span>
+                                        <span>{format(parseDbDate(log.createAt), 'dd MMM yyyy HH:mm', { locale: th })}</span>
                                     </div>
                                 </div>
                             ))
@@ -272,7 +273,7 @@ export default function AuditLogsPage() {
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-slate-500 shrink-0">
                                         <Clock size={14} />
-                                        <span>{format(new Date(log.createAt), 'dd MMM yyyy HH:mm', { locale: th })}</span>
+                                        <span>{format(parseDbDate(log.createAt), 'dd MMM yyyy HH:mm', { locale: th })}</span>
                                     </div>
                                 </div>
                             ))

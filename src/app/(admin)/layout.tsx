@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { AdminLayout } from "@/components/layout";
 import { useAuth } from "@/features/auth/auth-context";
@@ -10,14 +10,26 @@ export default function AdminGroupLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading, isAdmin } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
             router.push('/login');
+            return;
         }
-    }, [isAuthenticated, isLoading, router]);
+
+        if (!isLoading && isAuthenticated && !isAdmin) {
+            // Guard routes for System Admins (who are not 'isAdmin')
+            const adminOnlyPaths = ['/users', '/payments', '/cpe-credits', '/audit-logs', '/settings'];
+            const isTryingToAccessAdminOnly = adminOnlyPaths.some(p => pathname?.startsWith(p));
+            
+            if (isTryingToAccessAdminOnly) {
+                router.push('/');
+            }
+        }
+    }, [isAuthenticated, isLoading, isAdmin, pathname, router]);
 
     if (isLoading) {
         return (

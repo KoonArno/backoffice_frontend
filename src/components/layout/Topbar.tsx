@@ -69,8 +69,12 @@ export default function Topbar({ onMobileMenuToggle }: TopbarProps) {
                         {user?.username?.charAt(0).toUpperCase() || 'A'}
                     </div>
                     <div className="text-left hidden xl:block">
-                        <p className="text-sm font-semibold text-slate-700">{user?.username || 'ผู้ใช้'}</p>
-                        <p className="text-xs text-slate-500">{isAdmin ? 'Admin' : 'Officer'}</p>
+                        <p className="text-sm font-semibold text-slate-700">
+                            {user?.major ? `${user.major} ${user.majorSequence || '01'}` : (user?.username || 'ผู้ใช้')}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                            {(user?.role === 'super_admin' || user?.role === 'admin') ? 'Admin' : (user?.role === 'system_admin' ? 'System Admin' : 'Officer')}
+                        </p>
                     </div>
                 </div>
 
