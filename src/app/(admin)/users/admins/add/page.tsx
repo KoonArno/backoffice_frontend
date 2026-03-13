@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/services/api/client';
+import PasswordConfirmModal from '@/components/modals/PasswordConfirmModal';
 
 export default function AddAdminPage() {
     const router = useRouter();
@@ -16,6 +17,8 @@ export default function AddAdminPage() {
     const [availableRoles, setAvailableRoles] = useState<{ id: string; name: string; description: string }[]>([]);
     const [isLoadingRoles, setIsLoadingRoles] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchRoles = async () => {
@@ -53,23 +56,38 @@ export default function AddAdminPage() {
             return;
         }
 
+        // Show password confirmation modal instead of creating directly
+        setPasswordError(null);
+        setShowPasswordModal(true);
+    };
+
+    const handleConfirmCreate = async (confirmPassword: string) => {
         setIsCreating(true);
+        setPasswordError(null);
         try {
+            const isOfficer = role === 'officer' || role === 'system_admin';
             const data = {
                 email,
                 password,
                 role,
+                confirmPassword,
                 ...(isOfficer ? { department, major } : {}),
             };
 
             await apiClient.post('/admin/users', data);
             
+            setShowPasswordModal(false);
             alert('สร้างผู้ดูแลระบบสำเร็จ');
             router.push('/users/admins');
         } catch (error: unknown) {
             console.error('Failed to create admin:', error);
             const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างผู้ดูแลระบบ';
-            alert(errorMessage);
+            if (errorMessage.includes('รหัสผ่าน')) {
+                setPasswordError(errorMessage);
+            } else {
+                setShowPasswordModal(false);
+                alert(errorMessage);
+            }
         } finally {
             setIsCreating(false);
         }
@@ -233,6 +251,18 @@ export default function AddAdminPage() {
                     </button>
                 </div>
             </form>
+
+            {/* Password Confirmation Modal */}
+            <PasswordConfirmModal
+                isOpen={showPasswordModal}
+                title="ยืนยันการสร้างผู้ดูแลระบบ"
+                description="กรุณากรอกรหัสผ่านของคุณเพื่อยืนยันว่าต้องการสร้างบัญชีผู้ดูแลระบบใหม่"
+                confirmLabel="ยืนยันการสร้าง"
+                isLoading={isCreating}
+                error={passwordError}
+                onConfirm={handleConfirmCreate}
+                onCancel={() => { setShowPasswordModal(false); setPasswordError(null); }}
+            />
         </div>
     );
 }

@@ -75,8 +75,11 @@ class ApiClient {
         });
     }
 
-    async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, { method: 'DELETE' });
+    async delete<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
+        return this.request<T>(endpoint, {
+            method: 'DELETE',
+            ...(data ? { body: JSON.stringify(data) } : {}),
+        });
     }
 
     async getPaginated<T>(

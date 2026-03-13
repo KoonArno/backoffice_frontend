@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, AlertCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { apiClient } from '@/services/api/client';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { parseDbDate } from '@/utils/date';
+import PasswordConfirmModal from '@/components/modals/PasswordConfirmModal';
 
 interface AdminUser {
     id: string;
@@ -25,6 +26,7 @@ export default function AdminsPage() {
     const [error, setError] = useState<string | null>(null);
     const [adminToDelete, setAdminToDelete] = useState<AdminUser | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
 
     const fetchAdmins = async () => {
         try {
@@ -45,22 +47,28 @@ export default function AdminsPage() {
         fetchAdmins();
     }, []);
 
-    const confirmDelete = async () => {
+    const confirmDelete = async (confirmPassword: string) => {
         if (!adminToDelete) return;
 
         try {
             setIsDeleting(true);
-            await apiClient.delete(`/admin/users/${adminToDelete.id}`);
+            setPasswordError(null);
+            await apiClient.delete(`/admin/users/${adminToDelete.id}`, { confirmPassword });
             setAdmins(prev => prev.filter(admin => admin.id !== adminToDelete.id));
             setAdminToDelete(null);
+            setPasswordError(null);
             alert('ลบผู้ดูแลระบบสำเร็จ');
         } catch (error: unknown) {
             console.error('Failed to delete admin:', error);
             const err = error as Error;
-            alert(err.message || 'เกิดข้อผิดพลาดในการลบ');
-            // If we want to keep the modal open on error, don't setAdminToDelete(null) here
-            // But usually, it's safer to close it or show an error state
-            setAdminToDelete(null); // Optional: close modal even on error to reset state
+            const errorMessage = err.message || 'เกิดข้อผิดพลาดในการลบ';
+            if (errorMessage.includes('รหัสผ่าน')) {
+                setPasswordError(errorMessage);
+            } else {
+                setAdminToDelete(null);
+                setPasswordError(null);
+                alert(errorMessage);
+            }
         } finally {
             setIsDeleting(false);
         }
@@ -161,7 +169,7 @@ export default function AdminsPage() {
                                         </td>
                                         <td className="px-6 py-4 align-middle text-right">
                                             <button 
-                                                onClick={() => setAdminToDelete(admin)}
+                                                onClick={() => { setAdminToDelete(admin); setPasswordError(null); }}
                                                 className="text-red-500 hover:text-red-600 font-medium text-sm px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                                             >
                                                 ลบ
@@ -181,49 +189,17 @@ export default function AdminsPage() {
                 </div>
             </div>
 
-            {/* Delete Confirmation Modal */}
-            {adminToDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-slide-up">
-                        <div className="p-6 text-center">
-                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <AlertCircle size={32} className="text-red-500" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-2">
-                                ยืนยันการลบผู้ดูแลระบบ
-                            </h3>
-                            <p className="text-slate-500 mb-6">
-                                คุณแน่ใจหรือไม่ว่าต้องการลบบัญชี <span className="font-semibold text-slate-700">{adminToDelete.username}</span> ?
-                                การดำเนินการนี้ไม่สามารถยกเลิกได้
-                            </p>
-                        </div>
-                        <div className="flex bg-slate-50 p-4 border-t border-slate-100 gap-3">
-                            <button
-                                onClick={() => setAdminToDelete(null)}
-                                disabled={isDeleting}
-                                className="flex-1 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 hover:text-slate-900 font-semibold transition-all disabled:opacity-50"
-                            >
-                                ยกเลิก
-                            </button>
-                            <button
-                                onClick={confirmDelete}
-                                disabled={isDeleting}
-                                className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 font-semibold transition-all flex justify-center items-center gap-2 shadow-sm shadow-red-200 hover:shadow-md hover:shadow-red-200 disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {isDeleting ? (
-                                    <>
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        <span>กำลังลบ...</span>
-                                    </>
-                                ) : (
-                                    <span>ลบข้อมูล</span>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Password Confirmation Modal for Delete */}
+            <PasswordConfirmModal
+                isOpen={!!adminToDelete}
+                title="ยืนยันการลบผู้ดูแลระบบ"
+                description={`คุณกำลังจะลบบัญชี "${adminToDelete?.username}" กรุณากรอกรหัสผ่านของคุณเพื่อยืนยัน`}
+                confirmLabel="ยืนยันการลบ"
+                isLoading={isDeleting}
+                error={passwordError}
+                onConfirm={confirmDelete}
+                onCancel={() => { setAdminToDelete(null); setPasswordError(null); }}
+            />
         </div>
     );
 }
-

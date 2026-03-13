@@ -20,6 +20,8 @@ const ACTION_MAP: Record<string, string> = {
     'CREATE_SUBCATEGORY': 'สร้างหมวดหมู่ย่อยใหม่',
     'UPDATE_SUBCATEGORY': 'แก้ไขหมวดหมู่ย่อย',
     'DELETE_SUBCATEGORY': 'ลบหมวดหมู่ย่อย',
+    'CREATE_ADMIN': 'สร้างผู้ดูแลระบบใหม่',
+    'DELETE_ADMIN': 'ลบผู้ดูแลระบบ',
 };
 
 export default function AuditLogsPage() {
@@ -110,6 +112,9 @@ export default function AuditLogsPage() {
         }
         if (log.targetTable === 'subcategories') {
             return (newValue?.name as string) || (oldValue?.name as string) || '-';
+        }
+        if (log.targetTable === 'admin_user') {
+            return (newValue?.username as string) || (oldValue?.username as string) || '-';
         }
         return '-';
     };
