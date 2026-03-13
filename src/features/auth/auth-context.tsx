@@ -8,7 +8,10 @@ export interface AdminUser {
   id: string;
   username: string;
   email: string;
-  role: 'admin' | 'officer';
+  role: 'admin' | 'officer' | 'super_admin' | 'system_admin' | string;
+  department?: string;
+  major?: string;
+  majorSequence?: string;
 }
 
 interface AuthState {
@@ -23,6 +26,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   isAdmin: boolean;
   isOfficer: boolean;
+  role: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -68,6 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 username: data.user.username,
                 email: data.user.email,
                 role: data.user.role,
+                department: data.user.department,
+                major: data.user.major,
+                majorSequence: data.user.majorSequence,
               };
               sessionStorage.setItem(USER_KEY, JSON.stringify(verifiedUser));
               setTimeout(() => {
@@ -126,6 +133,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       username: data.user.username,
       email: data.user.email,
       role: data.user.role,
+      department: data.user.department,
+      major: data.user.major,
+      majorSequence: data.user.majorSequence,
     };
 
     sessionStorage.setItem(TOKEN_KEY, data.token);
@@ -145,8 +155,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ...state,
     login,
     logout,
-    isAdmin: state.user?.role === 'admin',
-    isOfficer: state.user?.role === 'officer',
+    isAdmin: state.user?.role === 'admin' || state.user?.role === 'super_admin',
+    isOfficer: state.user?.role === 'officer' || state.user?.role === 'system_admin',
+    role: state.user?.role || null,
   };
 
   return (

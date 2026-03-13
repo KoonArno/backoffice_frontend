@@ -5,7 +5,6 @@ import { usePharmacists } from '@/features/users/hooks';
 import { UserStatsCards } from '@/features/users/components/UserStatsCards';
 import { UserTableToolbar } from '@/features/users/components/UserTableToolbar';
 import { PharmacistsTable } from '@/features/users/components/PharmacistsTable';
-import { Plus } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 
@@ -60,10 +59,6 @@ export default function PharmacistsPage() {
                     </h1>
                     <p className="text-slate-500">จัดการเภสัชกรในระบบ</p>
                 </div>
-                <button className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all font-semibold">
-                    <Plus size={20} />
-                    <span>เพิ่มเภสัชกร</span>
-                </button>
             </div>
 
             {/* Stats Cards */}

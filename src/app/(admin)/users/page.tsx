@@ -5,7 +5,6 @@ import { useUsers } from '@/features/users/hooks';
 import { UserStatsCards } from '@/features/users/components/UserStatsCards';
 import { UserTableToolbar } from '@/features/users/components/UserTableToolbar';
 import { UsersTable } from '@/features/users/components/UsersTable';
-import { Plus } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 
@@ -60,11 +59,6 @@ export default function UsersPage() {
                     </h1>
                     <p className="text-slate-500 text-sm md:text-base">จัดการผู้ใช้ทั่วไปในระบบ</p>
                 </div>
-                <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-500 text-white px-5 md:px-6 py-3 rounded-xl hover:shadow-lg transition-all font-semibold touch-target">
-                    <Plus size={20} />
-                    <span className="hidden sm:inline">เพิ่มผู้ใช้</span>
-                    <span className="sm:hidden">เพิ่ม</span>
-                </button>
             </div>
 
             {/* Stats Cards */}
