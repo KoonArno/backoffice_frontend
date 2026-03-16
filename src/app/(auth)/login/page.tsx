@@ -156,7 +156,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); if (fieldError === 'email') { setError(''); setFieldError(null); } }}
-                  placeholder="admin@pharmacy.ac.th"
+
                   required
                   className={`w-full pl-12 pr-5 py-4 text-base bg-white/5 border-2 rounded-xl text-white placeholder-blue-300/30 focus:outline-none focus:ring-0 transition-all ${fieldError === 'email' ? 'border-red-400 focus:border-red-500' : 'border-white/10 focus:border-blue-400 hover:border-white/20'}`}
                 />
@@ -181,7 +181,7 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); if (fieldError === 'password') { setError(''); setFieldError(null); } }}
-                  placeholder="••••••••"
+
                   required
                   minLength={6}
                   className={`w-full pl-12 pr-5 py-4 text-base bg-white/5 border-2 rounded-xl text-white placeholder-blue-300/30 focus:outline-none focus:ring-0 transition-all ${fieldError === 'password' ? 'border-red-400 focus:border-red-500' : 'border-white/10 focus:border-blue-400 hover:border-white/20'}`}
